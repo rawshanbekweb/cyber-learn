@@ -23,6 +23,19 @@ export interface AssignmentQuestion {
   correctAnswer: number; // index of correct option
 }
 
+export interface Lesson {
+  id: number;
+  title: string;
+  description: string;
+  content: string;
+  category: string;
+  difficulty: "Boshlang'ich" | "O'rta" | "Yuqori";
+  videoUrl: string;
+  tags: string[];
+  createdAt: string;
+  readByStudents: number[];
+}
+
 export interface Assignment {
   id: number;
   title: string;
@@ -69,6 +82,7 @@ export interface AppState {
   fuzzyWeights: FuzzyWeights;
   assignments: Assignment[];
   students: Student[];
+  lessons: Lesson[];
   
   loginUser: (name: string, parol: string, role: "Student" | "Teacher") => { success: boolean; message?: string };
   registerStudent: (name: string, age: number) => { success: boolean; message?: string };
@@ -79,6 +93,9 @@ export interface AppState {
   updateFuzzyWeights: (weights: Partial<FuzzyWeights>) => void;
   addAssignment: (title: string, studentId: number, targetModuleId: number, questions?: AssignmentQuestion[], description?: string) => void;
   completeAssignment: (assignmentId: number) => void;
+  addLesson: (lesson: Omit<Lesson, 'id' | 'createdAt' | 'readByStudents'>) => void;
+  deleteLesson: (lessonId: number) => void;
+  markLessonRead: (lessonId: number) => void;
   resetProgress: () => void;
 }
 
@@ -169,6 +186,7 @@ const initialState = {
   fuzzyWeights: defaultFuzzyWeights,
   assignments: [],
   students: initialStudents,
+  lessons: [],
 };
 
 export const useAppStore = create<AppState>()(
@@ -418,10 +436,38 @@ export const useAppStore = create<AppState>()(
         )
       })),
 
+      addLesson: (lessonData) => set((state) => ({
+        lessons: [
+          {
+            id: Date.now(),
+            ...lessonData,
+            createdAt: new Date().toISOString(),
+            readByStudents: [],
+          },
+          ...state.lessons,
+        ],
+      })),
+
+      deleteLesson: (lessonId) => set((state) => ({
+        lessons: state.lessons.filter(l => l.id !== lessonId),
+      })),
+
+      markLessonRead: (lessonId) => set((state) => {
+        const userId = state.currentUser?.id;
+        if (!userId) return {};
+        return {
+          lessons: state.lessons.map(l =>
+            l.id === lessonId && !l.readByStudents.includes(userId)
+              ? { ...l, readByStudents: [...l.readByStudents, userId] }
+              : l
+          ),
+        };
+      }),
+
       resetProgress: () => set(initialState),
     }),
     {
-      name: 'cyber-learning-store-v4',
+      name: 'cyber-learning-store-v5',
     }
   )
 );
