@@ -17,6 +17,7 @@ import AIEngine from "@/pages/AIEngine";
 import Analytics from "@/pages/Analytics";
 import AuthPage from "@/pages/AuthPage";
 import Assignments from "@/pages/Assignments";
+import Lessons from "@/pages/Lessons";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ function Router() {
         <Route path="/ai-engine" component={AIEngine} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/assignments" component={Assignments} />
+        <Route path="/lessons" component={Lessons} />
         <Route component={NotFound} />
       </Switch>
     </AnimatePresence>
