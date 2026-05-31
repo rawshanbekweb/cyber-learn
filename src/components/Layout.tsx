@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Shield, Cpu, BarChart3, GraduationCap, UserCheck, ShieldCheck, LogOut, User, ClipboardList } from "lucide-react";
+import { BookOpen, Shield, Cpu, BarChart3, GraduationCap, UserCheck, ShieldCheck, LogOut, User, ClipboardList, BookMarked } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { Badge } from "@/components/ui/badge";
 
@@ -52,6 +52,19 @@ export function Layout({ children }: { children: ReactNode }) {
           >
             <BookOpen className="w-4 h-4 shrink-0" />
             Learning
+          </Link>
+
+          {/* Darslar (Lessons) - Teacher & Student */}
+          <Link
+            href="/lessons"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              location === "/lessons"
+                ? "bg-[#f1f3f5] text-black font-semibold"
+                : "text-muted-foreground hover:bg-[#f8f9fa] hover:text-black"
+            }`}
+          >
+            <BookMarked className="w-4 h-4 shrink-0" />
+            {userRole === "Teacher" ? "Darslar (Boshqaruv)" : "Darslar"}
           </Link>
 
           {/* Cybersecurity (Student only) */}
