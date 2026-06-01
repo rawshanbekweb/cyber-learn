@@ -1,4 +1,5 @@
 import { useAppStore } from "@/store/useAppStore";
+import { translateLevel } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -12,17 +13,17 @@ export default function Analytics() {
   const [, setLocation] = useLocation();
 
   const triggerRemediation = (studentId: number, studentName: string) => {
-    addAssignment("Fuzzy Remediation: Qayta o'rganish va asoslar", studentId, 1);
+    addAssignment("Fuzzy Qayta o'rganish: Asoslarni mustahkamlash", studentId, 1);
     toast({
-      title: "Remediation (Soddalashtirish)",
+      title: "Qayta o'rganish (Soddalashtirilgan)",
       description: `${studentName} uchun asosiy tushunchalar moduli biriktirildi.`,
     });
   };
 
   const triggerFastForward = (studentId: number, studentName: string) => {
-    addAssignment("Fuzzy Transition: Murakkab himoya tizimlari", studentId, 4);
+    addAssignment("Fuzzy O'tish: Murakkab himoya tizimlari", studentId, 4);
     toast({
-      title: "Fast-Forward (O'tish qarori)",
+      title: "O'tish qarori", 
       description: `${studentName} muvaffaqiyatli o'tgani uchun murakkab modulga yo'naltirildi.`,
     });
   };
@@ -114,7 +115,7 @@ export default function Analytics() {
                           student.level === "Intermediate" ? "bg-[#e9ecef] text-black" :
                           "bg-[#f1f3f5] text-muted-foreground"
                         }`}>
-                          {student.level}
+                          {translateLevel(student.level)}
                         </span>
                       </td>
                       <td className="p-4 font-mono text-muted-foreground">
@@ -128,14 +129,14 @@ export default function Analytics() {
                             onClick={() => triggerRemediation(student.id, student.name)}
                             className="text-[10px] h-7 font-mono text-muted-foreground border-border/80"
                           >
-                            Remediation (Sodda)
+                            Qayta o'rganish
                           </Button>
                           <Button
                             size="sm"
                             onClick={() => triggerFastForward(student.id, student.name)}
                             className="text-[10px] h-7 font-mono bg-black text-white hover:bg-black/90"
                           >
-                            Fast-Forward
+                            O'tish
                           </Button>
                         </div>
                       </td>
@@ -247,12 +248,12 @@ export default function Analytics() {
                         <div className="flex items-start justify-between gap-2">
                           <span className="font-bold text-xs text-black leading-snug">{as.title}</span>
                           {as.completed ? (
-                            <span className="bg-[#e9ecef] text-black font-mono text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0">Done</span>
+                            <span className="bg-[#e9ecef] text-black font-mono text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0">Bajarildi</span>
                           ) : (
-                            <span className="bg-black text-white font-mono text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0">Open</span>
+                            <span className="bg-black text-white font-mono text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0">Ochilgan</span>
                           )}
                         </div>
-                        <div className="text-[10px] text-muted-foreground font-mono">Assigned: {as.dateAssigned}</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">Belgilangan sana: {as.dateAssigned}</div>
                       </div>
                       {!as.completed && (
                         <Button 

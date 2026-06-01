@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Info, Settings2, Sliders, ArrowDown, Sparkles, CheckCircle2 } from "lucide-react";
+import { translateLevel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AIEngine() {
@@ -37,8 +38,8 @@ export default function AIEngine() {
 
   const flowSteps = [
     {
-      title: "1. Tizim ishga tushishi (Start)",
-      desc: "Loyiha o'quvchi ma'lumotlarini qabul qiladi va diagnostic jarayonini boshlaydi.",
+      title: "1. Tizim ishga tushishi",
+      desc: "Loyiha o'quvchi ma'lumotlarini qabul qiladi va diagnostika jarayonini boshlaydi.",
       active: true,
     },
     {
@@ -48,7 +49,7 @@ export default function AIEngine() {
     },
     {
       title: "3. Fuzzy bilimlarni baholash",
-      desc: "Noma'lumlikka asoslangan (Low / Medium / High) baholash mexanizmi.",
+      desc: "Noma'lumlikka asoslangan (Past / O'rta / Yuqori) baholash mexanizmi.",
       active: hasCompletedInitialTest,
     },
     {
@@ -58,7 +59,7 @@ export default function AIEngine() {
     },
     {
       title: "5. Shaxsiy o'quv dasturi generatsiyasi",
-      desc: `IF-THEN qoidalari orqali: Hozirgi darajangiz - ${currentLevel}`,
+      desc: `Agar-qoidalar orqali aniqlanadi: Hozirgi darajangiz - ${translateLevel(currentLevel)}`,
       active: hasCompletedInitialTest,
     },
     {
@@ -72,8 +73,8 @@ export default function AIEngine() {
       active: hasCompletedInitialTest,
     },
     {
-      title: "8. O'tish qarori (Dynamic Transition)",
-      desc: `Fuzzy ko'rsatkich: ${(readinessScore * 100).toFixed(0)}% (IF success = HIGH THEN go forward | IF success = MEDIUM THEN repeat + hints)`,
+      title: "8. O'tish qarori",
+      desc: `Fuzzy ko'rsatkich: ${(readinessScore * 100).toFixed(0)}% (Agar natija = Yuqori bo'lsa oldinga o'ting, agar natija = O'rta bo'lsa takrorlang + maslahatlar)`,
       active: hasCompletedInitialTest,
     }
   ];
@@ -82,7 +83,7 @@ export default function AIEngine() {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-black font-mono">Fuzzy AI Engine & ANFIS</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-black font-mono">Fuzzy AI Motor va ANFIS</h1>
         <p className="text-muted-foreground mt-1">
           Noma'lumlikka asoslangan intellektual moslashuvchan o'qitish tizimi boshqaruv markazi.
         </p>
@@ -154,7 +155,7 @@ export default function AIEngine() {
               {/* Rule 1 Weight */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="font-bold text-black">Qoida 1 (Beginner) og'irligi</span>
+                  <span className="font-bold text-black">Qoida 1 (Boshlang'ich) og'irligi</span>
                   <span className="bg-[#f1f3f5] px-1.5 py-0.5 rounded text-black font-semibold">
                     {fuzzyWeights.rule1Weight.toFixed(2)}
                   </span>
@@ -175,7 +176,7 @@ export default function AIEngine() {
               {/* Rule 2 Weight */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="font-bold text-black">Qoida 2 (Intermediate) og'irligi</span>
+                  <span className="font-bold text-black">Qoida 2 (O'rta) og'irligi</span>
                   <span className="bg-[#f1f3f5] px-1.5 py-0.5 rounded text-black font-semibold">
                     {fuzzyWeights.rule2Weight.toFixed(2)}
                   </span>
@@ -196,7 +197,7 @@ export default function AIEngine() {
               {/* Rule 3 Weight */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="font-bold text-black">Qoida 3 (Advanced) og'irligi</span>
+                  <span className="font-bold text-black">Qoida 3 (Yuqori) og'irligi</span>
                   <span className="bg-[#f1f3f5] px-1.5 py-0.5 rounded text-black font-semibold">
                     {fuzzyWeights.rule3Weight.toFixed(2)}
                   </span>
@@ -217,7 +218,7 @@ export default function AIEngine() {
               {/* Beginner Threshold */}
               <div className="space-y-2 pt-2 border-t border-border/40">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="font-bold text-black">Beginner chegara qiymati</span>
+                  <span className="font-bold text-black">Boshlang'ich chegarasi</span>
                   <span className="bg-[#f1f3f5] px-1.5 py-0.5 rounded text-black font-semibold">
                     {fuzzyWeights.beginnerThreshold.toFixed(2)}
                   </span>
@@ -235,7 +236,7 @@ export default function AIEngine() {
               {/* Intermediate Threshold */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="font-bold text-black">Intermediate chegara qiymati</span>
+                  <span className="font-bold text-black">O'rta chegarasi</span>
                   <span className="bg-[#f1f3f5] px-1.5 py-0.5 rounded text-black font-semibold">
                     {fuzzyWeights.intermediateThreshold.toFixed(2)}
                   </span>
@@ -286,7 +287,7 @@ export default function AIEngine() {
                 <p className="text-muted-foreground leading-relaxed">
                   Tizim quyidagi og'irlik formulasidan foydalanib o'quvchining yakuniy bilim tayyorgarligi darajasini baholaydi:
                   <span className="block bg-[#f8f9fa] p-2 rounded text-black font-mono text-[10px] mt-1.5 leading-normal">
-                    Score = (R1*w1 + R2*w2 + R3*w3) / (R1 + R2 + R3)
+                    Ball = (R1*w1 + R2*w2 + R3*w3) / (R1 + R2 + R3)
                   </span>
                 </p>
               </div>

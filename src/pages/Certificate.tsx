@@ -21,7 +21,7 @@ export default function Certificate() {
       <div className="max-w-4xl w-full relative">
         <div className="absolute top-4 right-4 z-10 print:hidden">
           <Button onClick={() => window.print()} variant="outline" className="font-mono border-primary text-primary hover:bg-primary/10">
-            <Printer className="w-4 h-4 mr-2" /> Print Certificate
+            <Printer className="w-4 h-4 mr-2" /> Sertifikatni chop etish
           </Button>
         </div>
 
@@ -42,7 +42,7 @@ export default function Certificate() {
             <h2 className="text-primary font-mono text-sm tracking-[0.3em] uppercase mb-4">CyberLearn AI</h2>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold tracking-tight mb-8 text-foreground">
-              CERTIFICATE OF ACHIEVEMENT
+              YUTUQ SERTIFIKATI
             </h1>
 
             <div className="flex items-center justify-center gap-4 mb-8">
@@ -51,29 +51,29 @@ export default function Certificate() {
               <div className="h-[1px] w-16 bg-primary/50" />
             </div>
 
-            <p className="text-muted-foreground text-lg mb-2 font-mono">This certifies successful completion of the</p>
-            <p className="text-2xl font-bold mb-8 font-mono text-foreground">Adaptive Cybersecurity Learning Platform</p>
+            <p className="text-muted-foreground text-lg mb-2 font-mono">Ushbu sertifikatni oluvchining quyidagilarni muvaffaqiyatli tamomlaganini tasdiqlaydi:</p>
+            <p className="text-2xl font-bold mb-8 font-mono text-foreground">Moslashuvchan kiberxavfsizlik ta'lim platformasi</p>
             
-            <p className="text-muted-foreground text-lg mb-2 font-mono">with</p>
+            <p className="text-muted-foreground text-lg mb-2 font-mono">Mavzusi:</p>
             <p className="text-3xl font-bold text-accent drop-shadow-[0_0_10px_rgba(var(--accent),0.3)] mb-12">
-              Advanced Cybersecurity Proficiency
+              Kiberxavfsizlik bo'yicha yuqori malaka
             </p>
 
             <div className="grid sm:grid-cols-3 gap-8 items-end mt-16 max-w-3xl mx-auto">
               <div className="border-t border-border/50 pt-2">
-                <p className="font-mono text-sm text-muted-foreground">Fuzzy Logic Engine</p>
+                <p className="font-mono text-sm text-muted-foreground">Fuzzy mantiqiy motor</p>
               </div>
               
               <div className="text-center">
                 <div className="text-5xl font-mono font-bold text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.4)] mb-2">
                   {(readinessScore * 100).toFixed(1)}%
                 </div>
-                <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Readiness Score</p>
+                <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Tayyorgarlik ko'rsatkichi</p>
               </div>
 
               <div className="border-t border-border/50 pt-2">
                 <p className="font-mono text-sm text-foreground">{new Date().toLocaleDateString()}</p>
-                <p className="font-mono text-xs text-muted-foreground mt-1">Date of Issuance</p>
+                <p className="font-mono text-xs text-muted-foreground mt-1">Berilgan sana</p>
               </div>
             </div>
 

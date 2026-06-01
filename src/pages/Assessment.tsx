@@ -2,20 +2,21 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
+import { translateLevel } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 
 const questions = [
-  { q: "What does CIA stand for in cybersecurity?", correct: 0, options: ["Confidentiality, Integrity, Availability","Central Intelligence Agency","Computer Information Access","Cyber Infrastructure Architecture"] },
-  { q: "Which protocol encrypts web traffic?", correct: 2, options: ["HTTP","FTP","HTTPS","SMTP"] },
-  { q: "What is a zero-day vulnerability?", correct: 1, options: ["A bug fixed immediately","An unknown exploit with no patch yet","A firewall rule","A type of malware"] },
-  { q: "What does a firewall do?", correct: 1, options: ["Speeds up internet","Monitors and filters network traffic","Encrypts data","Backs up files"] },
-  { q: "What is phishing?", correct: 1, options: ["A network scan technique","Fraudulent attempt to steal credentials","A type of encryption","A system monitoring tool"] },
-  { q: "Which is a strong password?", correct: 2, options: ["password123","abc","Tr0ub4dor&3!","123456"] },
-  { q: "What is two-factor authentication?", correct: 2, options: ["Using two passwords","Biometric + password","Security requiring two forms of verification","Double encryption"] },
-  { q: "What is malware?", correct: 1, options: ["Hardware defect","Malicious software designed to harm systems","Network protocol","A firewall type"] }
+  { q: "Kiberxavfsizlikda CIA nimaning qisqartmasi?", correct: 0, options: ["Maxfiylik, Butunlik, Mavjudlik","Markaziy Razvedka Agentligi","Kompyuter Ma'lumotlariga Kirish","Kiber Infratuzilma Arxitekturasi"] },
+  { q: "Qaysi protokol veb trafikni shifrlaydi?", correct: 2, options: ["HTTP","FTP","HTTPS","SMTP"] },
+  { q: "Zero-day zaiflik nima?", correct: 1, options: ["Zudlik bilan tuzatilgan xato","Hali patch mavjud bo'lmagan noma'lum ekspluat","Firewall qoidasidir","Zararli dastur turi"] },
+  { q: "Firewall nima qiladi?", correct: 1, options: ["Internetni tezlashtiradi","Tarmoq traffikini nazorat qiladi va filtrlaydi","Ma'lumotni shifrlaydi","Fayllarni zaxiralaydi"] },
+  { q: "Phishing nima?", correct: 1, options: ["Tarmoq skanerlash usuli","Kirish ma'lumotlarini o'g'irlashga qaratilgan firibgarlik","Shifrlash turi","Tizimni monitoring qilish vositasi"] },
+  { q: "Qaysi parol kuchli?", correct: 2, options: ["password123","abc","Tr0ub4dor&3!","123456"] },
+  { q: "Ikki faktorli autentifikatsiya nima?", correct: 2, options: ["Ikki paroldan foydalanish","Biometrik + parol","Ikki turdagi tekshiruvni talab qiluvchi xavfsizlik","Ikki marotaba shifrlash"] },
+  { q: "Malware nima?", correct: 1, options: ["Uskuna nosozligi","Tizimga zarar yetkazuvchi zararli dastur","Tarmoq protokoli","Firewall turi"] }
 ];
 
 export default function Assessment() {
@@ -76,31 +77,31 @@ export default function Assessment() {
       <motion.div initial="hidden" animate="visible" variants={pageVariants} className="max-w-2xl mx-auto space-y-8">
         <Card className="border-primary/50 glow-effect bg-card/50 backdrop-blur">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-mono text-primary">Assessment Complete</CardTitle>
-            <CardDescription>Fuzzy Logic Engine Evaluation Results</CardDescription>
+            <CardTitle className="text-3xl font-mono text-primary">Baholash yakunlandi</CardTitle>
+            <CardDescription>Fuzzy Logika Motorining natijalari</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="p-4 border border-border rounded-lg bg-background">
-                <div className="text-sm text-muted-foreground mb-1">Assigned Level</div>
-                <div className="text-2xl font-mono text-primary">{lastFuzzyResult.level}</div>
+                <div className="text-sm text-muted-foreground mb-1">Tayinlangan daraja</div>
+                <div className="text-2xl font-mono text-primary">{translateLevel(lastFuzzyResult.level)}</div>
               </div>
               <div className="p-4 border border-border rounded-lg bg-background">
-                <div className="text-sm text-muted-foreground mb-1">Readiness Score</div>
+                <div className="text-sm text-muted-foreground mb-1">Tayyorgarlik ko'rsatkichi</div>
                 <div className="text-2xl font-mono text-primary">{(lastFuzzyResult.score * 100).toFixed(1)}%</div>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-mono">
-                <span>System Alignment</span>
+                <span>Tizim mosligi</span>
                 <span>{(lastFuzzyResult.score * 100).toFixed(0)}%</span>
               </div>
               <Progress value={lastFuzzyResult.score * 100} className="h-2" />
             </div>
 
             <Button onClick={() => setLocation("/")} className="w-full font-mono text-lg h-12" data-testid="button-view-dashboard">
-              Initialize Dashboard
+              Boshqaruv paneliga qaytish
             </Button>
           </CardContent>
         </Card>
@@ -114,7 +115,7 @@ export default function Assessment() {
     <motion.div initial="hidden" animate="visible" variants={pageVariants} className="max-w-2xl mx-auto">
       <div className="mb-8 space-y-4">
         <div className="flex justify-between items-center font-mono">
-          <span className="text-muted-foreground" data-testid="text-progress">Question {currentQuestion + 1} of {questions.length}</span>
+          <span className="text-muted-foreground" data-testid="text-progress">{currentQuestion + 1}-savol / {questions.length} ta</span>
           <span className={`text-xl ${timeLeft < 10 ? 'text-destructive animate-pulse' : 'text-primary'}`} data-testid="text-timer">
             00:{timeLeft.toString().padStart(2, '0')}
           </span>
@@ -151,7 +152,7 @@ export default function Assessment() {
               disabled={selectedOption === null}
               data-testid="button-next"
             >
-              {currentQuestion === questions.length - 1 ? 'Submit Assessment' : 'Next Question'}
+              {currentQuestion === questions.length - 1 ? 'Baholashni topshirish' : 'Keyingi savol'}
             </Button>
           </div>
         </CardContent>

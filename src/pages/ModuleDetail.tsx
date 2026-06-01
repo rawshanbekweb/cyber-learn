@@ -9,46 +9,47 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Wifi, Lock, Server, ArrowLeft, Terminal, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { translateLevel } from "@/lib/utils";
 
 const moduleData = {
   1: {
-    title: "Cybersecurity Basics", icon: Shield,
-    content: "Cybersecurity is the practice of protecting systems, networks, and programs from digital attacks. The CIA Triad — Confidentiality, Integrity, and Availability — forms the foundation of all security principles. Confidentiality ensures only authorized parties access information. Integrity ensures data remains accurate and unmodified. Availability ensures systems remain accessible when needed. Common threats include malware, phishing, social engineering, and denial-of-service attacks.",
-    concepts: ["CIA Triad", "Threat Modeling", "Attack Vectors", "Defense in Depth"],
+    title: "Kiberxavfsizlik Asoslari", icon: Shield,
+    content: "Kiberxavfsizlik tizimlar, tarmoqlar va ilovalarni raqamli hujumlardan himoya qilish amaliyotidir. CIA Triadi — Maxfiylik, Butunlik va Mavjudlik — barcha xavfsizlik printsiplarining asosini tashkil etadi. Maxfiylik faqat ruxsat etilgan tomonlarga ma'lumotga kirishga imkon beradi. Butunlik ma'lumotning o'zgarmasligini ta'minlaydi. Mavjudlik esa tizimlarning kerak paytda ishlashini kafolatlaydi. Odatiy tahdidlar: zararli dastur, phishing, ijtimoiy muhandislik va xizmatni rad etish hujumlari.",
+    concepts: ["CIA Triadi", "Tahdidlarni Modellashtirish", "Hujum vektorlar", "Chuqur himoya qatlamlari"],
     quiz: [
-      {q: "What is the 'A' in CIA Triad?", options: ["Authentication","Availability","Authorization","Access"], correct: 1},
-      {q: "Which is NOT a common attack vector?", options: ["Phishing","Social Engineering","Encryption","Malware"], correct: 2},
-      {q: "What does Defense in Depth mean?", options: ["One strong firewall","Multiple security layers","Deep web protection","Antivirus only"], correct: 1}
+      {q: "CIA Triadidagi 'A' nima?", options: ["Autentifikatsiya","Mavjudlik","Avtorizatsiya","Kirish"], correct: 1},
+      {q: "Quyidagilardan qaysi biri keng tarqalgan hujum vektori emas?", options: ["Phishing","Ijtimoiy muhandislik","Shifrlash","Zararli dastur"], correct: 2},
+      {q: "Defense in Depth nima anglatadi?", options: ["Faqat bitta kuchli firewall","Bir nechta xavfsizlik qatlami","Chuqur veb himoyasi","Faqat antivirus"], correct: 1}
     ]
   },
   2: {
-    title: "Network Threats", icon: Wifi,
-    content: "Network security protects the integrity and usability of network and data. Common threats include Man-in-the-Middle (MitM) attacks, Distributed Denial of Service (DDoS), packet sniffing, and port scanning. Firewalls, intrusion detection systems (IDS), and virtual private networks (VPNs) are key defenses.",
-    concepts: ["Firewalls", "IDS/IPS", "VPN", "DDoS Protection"],
+    title: "Tarmoq Xavflari", icon: Wifi,
+    content: "Tarmoq xavfsizligi tarmoq va ma'lumotlarning yaxlitligi va foydalanish qobiliyatini himoya qiladi. Keng tarqalgan tahdidlar: Man-in-the-Middle (MitM), DDoS, paket ushlash va port tekshiruvi. Firewall, IDS/IPS va VPN asosiy himoya choralari hisoblanadi.",
+    concepts: ["Firewall", "IDS/IPS", "VPN", "DDoS Himoyasi"],
     quiz: [
-      {q: "What does DDoS stand for?", options: ["Distributed Denial of Service","Direct Data over SSL","Dynamic DNS over SMTP","Dual Disk Operating System"], correct: 0},
-      {q: "What is a MitM attack?", options: ["Malware in the machine","Intercepting communication between two parties","A firewall bypass","A port scanning method"], correct: 1},
-      {q: "What does a VPN protect?", options: ["Hardware","Browser history only","Network traffic and identity","Hard disk data"], correct: 2}
+      {q: "DDoS nimaning qisqartmasi?", options: ["Distributed Denial of Service","Direct Data over SSL","Dynamic DNS over SMTP","Dual Disk Operating System"], correct: 0},
+      {q: "MitM hujumi nima?", options: ["Mashina ichidagi zararli dastur","Ikki tomon orasidagi aloqa ushlash","Firewallni chetlab o'tish","Port skanerlash usuli"], correct: 1},
+      {q: "VPN nima uchun himoya qiladi?", options: ["Uskunani","Faqat brauzer tarixini","Tarmoq trafikini va identifikatsiyani","Qattiq disk ma'lumotlarini"], correct: 2}
     ]
   },
   3: {
-    title: "Cryptography", icon: Lock,
-    content: "Cryptography is the science of secure communication. Symmetric encryption (AES) uses one key. Asymmetric encryption (RSA) uses public/private key pairs. Hash functions (SHA-256) create fixed-size fingerprints. TLS/SSL protocols secure web communications.",
-    concepts: ["AES Encryption", "RSA Algorithm", "Hash Functions", "TLS/SSL"],
+    title: "Kriptografiya", icon: Lock,
+    content: "Kriptografiya xavfsiz aloqa fanidir. Simmetrik shifrlash (AES) bitta kalit bilan ishlaydi. Asimmetrik shifrlash (RSA) ochiq/maxfiy kalit juftliklarini ishlatadi. Hash funksiyalari (SHA-256) belgilangan uzunlikdagi barmoq izlarini yaratadi. TLS/SSL protokollari veb komunikatsiyalarni himoyalaydi.",
+    concepts: ["AES shifrlash", "RSA algoritmi", "Hash funksiyalari", "TLS/SSL"],
     quiz: [
-      {q: "AES is which type of encryption?", options: ["Asymmetric","Symmetric","Hash-based","Quantum"], correct: 1},
-      {q: "What is a public key used for?", options: ["Decryption only","Encryption (anyone can encrypt, only owner decrypts)","Password storage","Signing only"], correct: 1},
-      {q: "SHA-256 produces what?", options: ["Encrypted text","A fixed-size hash/fingerprint","A private key","A certificate"], correct: 1}
+      {q: "AES qaysi turdagi shifrlash?", options: ["Asimmetrik","Simmetrik","Hash asosida","Kvant"], correct: 1},
+      {q: "Ochiq kalit nima uchun ishlatiladi?", options: ["Faqat dekripsiya uchun","Shifrlash uchun (har kim shifrlashi, faqat egasi dekripti qiladi)","Parol saqlash","Faqat imzolash"], correct: 1},
+      {q: "SHA-256 nima hosil qiladi?", options: ["Shifrlangan matn","Belgilangan uzunlikdagi hash/barmoq izi","Maxfiy kalit","Sertifikat"], correct: 1}
     ]
   },
   4: {
-    title: "System Protection", icon: Server,
-    content: "System protection encompasses endpoint security, patch management, and access control. Principle of least privilege limits permissions. Multi-factor authentication adds layers. Regular patching closes known vulnerabilities. SIEM provides comprehensive monitoring.",
-    concepts: ["Least Privilege", "Patch Management", "MFA", "SIEM"],
+    title: "Tizim Himoyasi", icon: Server,
+    content: "Tizim himoyasi end-point xavfsizligi, yangilanishlarni boshqarish va kirish nazoratini qamrab oladi. Minimal huquq printsipi ruxsatlarni cheklaydi. Ko'p faktorli autentifikatsiya qatlam qo'shadi. Muntazam yangilash ma'lum zaifliklarni yopadi. SIEM kengaytirilgan monitoringni ta'minlaydi.",
+    concepts: ["Minimal huquq", "Yangilash boshqaruvi", "MFA", "SIEM"],
     quiz: [
-      {q: "What is the Principle of Least Privilege?", options: ["Give all users admin","Grant only minimum necessary permissions","Share credentials safely","Disable all accounts"], correct: 1},
-      {q: "Why is patch management important?", options: ["Adds features","Closes known security vulnerabilities","Improves UI","Increases storage"], correct: 1},
-      {q: "What does SIEM stand for?", options: ["Security Information and Event Management","System Integration and Event Monitoring","Secure Internet Endpoint Manager","Software Infrastructure Emergency Module"], correct: 0}
+      {q: "Minimal huquq printsipi nima?", options: ["Barcha foydalanuvchilarga admin berish","Faqat zarur ruxsatlarni berish","Parollarni xavfsiz ulashish","Barcha hisoblarni o'chirish"], correct: 1},
+      {q: "Yangilash boshqaruvi nega muhim?", options: ["Funktsiyalar qo'shadi","Ma'lum xavfsizlik zaifliklarini yopadi","Foydalanuvchi interfeysini yaxshilaydi","Xotirani oshiradi"], correct: 1},
+      {q: "SIEM nimaning qisqartmasi?", options: ["Xavfsizlik ma'lumotlari va voqealarni boshqarish","Tizim integratsiyasi va voqea monitoringi","Xavfsiz internet tugunini boshqaruvchi","Dasturiy ta'minot infratuzilmasi favqulodda moduli"], correct: 0}
     ]
   }
 };
@@ -119,10 +120,10 @@ export default function ModuleDetail() {
     return (
       <div className="text-center py-20">
         <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
-        <h2 className="text-2xl font-mono text-destructive">ACCESS DENIED</h2>
-        <p className="text-muted-foreground mt-2">This module is currently locked or does not exist.</p>
+        <h2 className="text-2xl font-mono text-destructive">KIRISH TAQIQLANDI</h2>
+        <p className="text-muted-foreground mt-2">Ushbu modul hozirda yopilgan yoki mavjud emas.</p>
         <Button variant="outline" className="mt-6" asChild>
-          <Link href="/modules">Return to Modules</Link>
+          <Link href="/modules">Modullarga qaytish</Link>
         </Button>
       </div>
     );
@@ -134,7 +135,7 @@ export default function ModuleDetail() {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto space-y-6">
       <Link href="/modules" className="inline-flex items-center text-sm font-mono text-muted-foreground hover:text-primary transition-colors">
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Modules
+        Modullar
       </Link>
 
       <div className="flex items-start justify-between border-b border-border/50 pb-6">
@@ -149,7 +150,7 @@ export default function ModuleDetail() {
         </div>
         {modProgress.completed && (
           <Badge variant="outline" className="border-accent text-accent px-3 py-1 font-mono text-sm">
-            <CheckCircle2 className="w-4 h-4 mr-2" /> Completed
+            <CheckCircle2 className="w-4 h-4 mr-2" /> Tugatildi
           </Badge>
         )}
       </div>
@@ -158,7 +159,7 @@ export default function ModuleDetail() {
         <div className="md:col-span-2 space-y-6">
           <Card className="bg-card/40 backdrop-blur border-border/50">
             <CardContent className="p-6">
-              <h3 className="font-mono text-lg text-primary mb-4 border-b border-border/50 pb-2">SYSTEM_DATA</h3>
+              <h3 className="font-mono text-lg text-primary mb-4 border-b border-border/50 pb-2">Modul ma'lumotlari</h3>
               <p className="text-muted-foreground leading-relaxed">
                 {data.content}
               </p>
@@ -172,12 +173,12 @@ export default function ModuleDetail() {
               'border-destructive bg-destructive/10 text-destructive'
             }`}>
               <AlertTitle className="font-mono mb-2 flex items-center gap-2">
-                <Terminal className="w-4 h-4" /> Assessment Result: {quizResult.level}
+                <Terminal className="w-4 h-4" /> Baholash natijasi: {translateLevel(quizResult.level)}
               </AlertTitle>
               <AlertDescription>
-                {quizResult.level === 'Beginner' && "Keep practicing. Retry this module to reinforce concepts."}
-                {quizResult.level === 'Intermediate' && "Progressing well. Continue to the next module."}
-                {quizResult.level === 'Advanced' && "Module mastered. Next module unlocked."}
+                {quizResult.level === 'Beginner' && "Amaliyotni davom ettiring. Ushbu modulni takrorlang."}
+                {quizResult.level === 'Intermediate' && "Yaxshi rivojlanish. Keyingi modulga o‘ting."}
+                {quizResult.level === 'Advanced' && "Modul muvaffaqiyatli egallandi. Keyingi modul ochildi."}
               </AlertDescription>
             </Alert>
           )}
@@ -190,7 +191,7 @@ export default function ModuleDetail() {
               data-testid="button-simulate-attack"
             >
               <Terminal className="w-5 h-5 mr-2" />
-              Simulate Attack / Test
+              Hujumni simulyatsiya qilish / Test
             </Button>
           )}
 
@@ -198,7 +199,7 @@ export default function ModuleDetail() {
             <Card className="border-primary/50 glow-effect bg-card/60 backdrop-blur">
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-center font-mono text-sm mb-4">
-                  <span className="text-muted-foreground">Simulation: {currentQuestion + 1}/{data.quiz.length}</span>
+                  <span className="text-muted-foreground">Simulyatsiya: {currentQuestion + 1}/{data.quiz.length}</span>
                   <span className={timeLeft < 10 ? 'text-destructive animate-pulse' : 'text-primary'}>
                     00:{timeLeft.toString().padStart(2, '0')}
                   </span>
@@ -227,7 +228,7 @@ export default function ModuleDetail() {
                   onClick={handleNextQuestion}
                   disabled={selectedOption === null}
                 >
-                  {currentQuestion === data.quiz.length - 1 ? 'Execute Evaluation' : 'Next Node'}
+                  {currentQuestion === data.quiz.length - 1 ? 'Baholashni yakunlash' : 'Keyingi savol'}
                 </Button>
               </CardContent>
             </Card>
@@ -237,7 +238,7 @@ export default function ModuleDetail() {
         <div className="space-y-6">
           <Card className="bg-card/40 backdrop-blur border-border/50">
             <CardHeader className="pb-3">
-              <CardTitle className="font-mono text-sm text-muted-foreground">Core Concepts</CardTitle>
+              <CardTitle className="font-mono text-sm text-muted-foreground">Asosiy tushunchalar</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
@@ -258,7 +259,7 @@ export default function ModuleDetail() {
               data-testid="button-mark-complete"
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
-              Mark as Complete
+              Tugatildi deb belgilash
             </Button>
           )}
         </div>

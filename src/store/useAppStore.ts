@@ -100,10 +100,10 @@ export interface AppState {
 }
 
 const initialModules: ModuleProgress[] = [
-  { id: 1, title: "Cybersecurity Basics", unlocked: true, completed: false },
-  { id: 2, title: "Network Threats", unlocked: false, completed: false },
-  { id: 3, title: "Cryptography", unlocked: false, completed: false },
-  { id: 4, title: "System Protection", unlocked: false, completed: false },
+  { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: false },
+  { id: 2, title: "Tarmoq xavflari", unlocked: false, completed: false },
+  { id: 3, title: "Kriptografiya", unlocked: false, completed: false },
+  { id: 4, title: "Tizim himoyasi", unlocked: false, completed: false },
 ];
 
 const defaultFuzzyWeights: FuzzyWeights = {
@@ -127,10 +127,10 @@ const initialStudents: Student[] = [
     errors: 0.6,
     hasCompletedInitialTest: true,
     moduleProgress: [
-      { id: 1, title: "Cybersecurity Basics", unlocked: true, completed: true },
-      { id: 2, title: "Network Threats", unlocked: false, completed: false },
-      { id: 3, title: "Cryptography", unlocked: false, completed: false },
-      { id: 4, title: "System Protection", unlocked: false, completed: false },
+      { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: true },
+      { id: 2, title: "Tarmoq xavflari", unlocked: false, completed: false },
+      { id: 3, title: "Kriptografiya", unlocked: false, completed: false },
+      { id: 4, title: "Tizim himoyasi", unlocked: false, completed: false },
     ],
     lastFuzzyResult: { score: 0.32, level: "Beginner", rule1: 0.5, rule2: 0, rule3: 0 }
   },
@@ -146,10 +146,10 @@ const initialStudents: Student[] = [
     errors: 0.3,
     hasCompletedInitialTest: true,
     moduleProgress: [
-      { id: 1, title: "Cybersecurity Basics", unlocked: true, completed: true },
-      { id: 2, title: "Network Threats", unlocked: true, completed: true },
-      { id: 3, title: "Cryptography", unlocked: false, completed: false },
-      { id: 4, title: "System Protection", unlocked: false, completed: false },
+      { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: true },
+      { id: 2, title: "Tarmoq xavflari", unlocked: true, completed: true },
+      { id: 3, title: "Kriptografiya", unlocked: false, completed: false },
+      { id: 4, title: "Tizim himoyasi", unlocked: false, completed: false },
     ],
     lastFuzzyResult: { score: 0.62, level: "Intermediate", rule1: 0, rule2: 0.4, rule3: 0.2 }
   },
@@ -165,10 +165,10 @@ const initialStudents: Student[] = [
     errors: 0.1,
     hasCompletedInitialTest: true,
     moduleProgress: [
-      { id: 1, title: "Cybersecurity Basics", unlocked: true, completed: true },
-      { id: 2, title: "Network Threats", unlocked: true, completed: true },
-      { id: 3, title: "Cryptography", unlocked: true, completed: true },
-      { id: 4, title: "System Protection", unlocked: true, completed: true },
+      { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: true },
+      { id: 2, title: "Tarmoq xavflari", unlocked: true, completed: true },
+      { id: 3, title: "Kriptografiya", unlocked: true, completed: true },
+      { id: 4, title: "Tizim himoyasi", unlocked: true, completed: true },
     ],
     lastFuzzyResult: { score: 0.85, level: "Advanced", rule1: 0, rule2: 0, rule3: 0.8 }
   },

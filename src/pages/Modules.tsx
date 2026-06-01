@@ -14,10 +14,10 @@ const icons = {
 };
 
 const descriptions = {
-  1: "Fundamental principles of cybersecurity, including the CIA Triad and threat modeling.",
-  2: "Understanding and defending against Man-in-the-Middle, DDoS, and other network attacks.",
-  3: "Secure communication using symmetric/asymmetric encryption and hashing algorithms.",
-  4: "Endpoint security, access control, multi-factor authentication, and SIEM monitoring.",
+  1: "Kiberxavfsizlikning asosiy tamoyillari: CIA triad, tahdidlarni modellashtirish va himoya qatlamlari.",
+  2: "Tarmoq hujumlarini - Man-in-the-Middle, DDoS va paket ushlashni aniqlash va qarshi turish.",
+  3: "Simmetrik/asimmetrik shifrlash va hash algoritmlari orqali xavfsiz aloqa.",
+  4: "Endpoint xavfsizligi, kirish nazorati, ko‘p faktorli autentifikatsiya va SIEM monitoring.",
 };
 
 const containerVariants = {
@@ -43,17 +43,17 @@ export default function Modules() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-mono tracking-tight text-primary">Training Modules</h1>
-          <p className="text-muted-foreground mt-1">Select an available module to begin or continue your training.</p>
+          <h1 className="text-3xl font-bold font-mono tracking-tight text-primary">Ta'lim modullari</h1>
+          <p className="text-muted-foreground mt-1">O'quv modullaridan birini tanlang va ta'limni boshlang yoki davom ettiring.</p>
         </div>
       </div>
 
       {currentLevel === "Beginner" && (
         <Alert className="border-primary/50 bg-primary/10 text-primary glow-effect">
           <Shield className="h-4 w-4" />
-          <AlertTitle className="font-mono">System Notice</AlertTitle>
+          <AlertTitle className="font-mono">Tizim xabari</AlertTitle>
           <AlertDescription>
-            Focus on Module 1 before advancing to unlock more content.
+            Keyingi modul ochilishini kutmasdan avval 1-modulni yakunlang.
           </AlertDescription>
         </Alert>
       )}
@@ -89,11 +89,11 @@ export default function Modules() {
                     <Icon className={`w-6 h-6 ${mod.unlocked ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
                   {mod.completed ? (
-                    <Badge variant="outline" className="border-accent text-accent font-mono">Completed</Badge>
+                    <Badge variant="outline" className="border-accent text-accent font-mono">Tugatildi</Badge>
                   ) : mod.unlocked ? (
-                    <Badge variant="outline" className="border-primary text-primary font-mono">Available</Badge>
+                    <Badge variant="outline" className="border-primary text-primary font-mono">Ochilgan</Badge>
                   ) : (
-                    <Badge variant="outline" className="border-muted-foreground text-muted-foreground font-mono">Locked</Badge>
+                    <Badge variant="outline" className="border-muted-foreground text-muted-foreground font-mono">Yopilgan</Badge>
                   )}
                 </CardHeader>
                 <CardContent>

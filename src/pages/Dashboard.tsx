@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { ShieldCheck, BookOpen, BarChart3, Sliders, Users, Star, ArrowRight, ArrowRightCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { translateLevel } from "@/lib/utils";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -29,24 +30,24 @@ export default function Dashboard() {
   const getRecommendation = () => {
     if (!hasCompletedInitialTest) {
       return { 
-        title: "Dastlabki Tashxis Testi (Initial Assessment)", 
-        reason: "Based on fuzzy logic: run evaluation to determine starting learning path",
+        title: "Dastlabki diagnostika testi",
+        reason: "Fuzzy hisoblash asosida boshlang'ich o'quv yo'lingiz aniqlanadi.",
         path: "/assessment"
       };
     }
     
     if (currentLevel === "Beginner") {
       return {
-        title: "Cybersecurity Basics",
-        reason: "Based on fuzzy logic: strengthen fundamentals and build basic awareness.",
+        title: "Kiberxavfsizlik asoslari",
+        reason: "Fuzzy hisoblash asosida asoslarni mustahkamlang.",
         path: "/module/1"
       };
     }
     
     if (currentLevel === "Intermediate") {
       return {
-        title: "Network Threats",
-        reason: "Based on fuzzy logic: increase difficulty slightly.",
+        title: "Tarmoq xavflari",
+        reason: "Fuzzy hisoblash asosida qiyinchilikni oshiring.",
         path: "/module/2"
       };
     }
@@ -55,15 +56,15 @@ export default function Dashboard() {
     const cryptoModule = moduleProgress.find(m => m.id === 3);
     if (cryptoModule && !cryptoModule.completed) {
       return {
-        title: "Cryptography",
-        reason: "Based on fuzzy logic: transition to advanced crypto and systems defense protocols.",
+        title: "Kriptografiya",
+        reason: "Fuzzy hisoblash asosida ilg'or kripto va tizim himoyasiga o'ting.",
         path: "/module/3"
       };
     }
     
     return {
-      title: "System Protection",
-      reason: "Based on fuzzy logic: transition to advanced system defense protocols.",
+      title: "Tizim himoyasi",
+      reason: "Fuzzy hisoblash asosida ilg'or tizim himoyasi moduliga o'ting.",
       path: "/module/4"
     };
   };
@@ -84,19 +85,19 @@ export default function Dashboard() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-black font-sans">Adaptive Learning Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-black font-sans">Moslashuvchan o‘quv paneli</h1>
             <p className="text-muted-foreground mt-1 text-sm font-sans">
-              AI-powered cybersecurity training system
+              AI asosidagi kiberxavfsizlik ta'lim tizimi
             </p>
           </div>
 
           {/* Card 1: Your Progress */}
           <Card className="border-border/60 shadow-sm bg-white">
             <CardContent className="p-6 space-y-4">
-              <h3 className="font-bold text-sm text-black font-sans">Your Progress</h3>
+              <h3 className="font-bold text-sm text-black font-sans">Sizning progress</h3>
               <Progress value={completionPercent} className="h-4 [&>div]:bg-black" />
               <div className="text-xs font-semibold text-muted-foreground font-sans">
-                Completion: {completionPercent}%
+                Tugallangan: {completionPercent}%
               </div>
             </CardContent>
           </Card>
@@ -104,12 +105,12 @@ export default function Dashboard() {
           {/* Card 2: AI Fuzzy Evaluation */}
           <Card className="border-border/60 shadow-sm bg-white">
             <CardContent className="p-6 space-y-2">
-              <h3 className="font-bold text-sm text-black font-sans">AI Fuzzy Evaluation</h3>
+              <h3 className="font-bold text-sm text-black font-sans">Fuzzy baholash</h3>
               <div className="font-mono text-sm font-bold text-black mt-1">
-                Current Level: {currentLevel} (Fuzzy: {readinessScore.toFixed(2)})
+                Hozirgi daraja: {translateLevel(currentLevel)} (Fuzzy: {readinessScore.toFixed(2)})
               </div>
               <div className="text-xs text-muted-foreground font-sans">
-                ANFIS model adjusts your learning path dynamically
+                ANFIS modeli sizning o‘quv yo‘lingizni dinamik tarzda sozlaydi
               </div>
             </CardContent>
           </Card>
@@ -117,10 +118,10 @@ export default function Dashboard() {
           {/* Card 3: Next Recommendation */}
           <Card className="border-border/60 shadow-sm bg-white">
             <CardContent className="p-6 space-y-4">
-              <h3 className="font-bold text-sm text-black font-sans">Next Recommendation</h3>
+              <h3 className="font-bold text-sm text-black font-sans">Keyingi tavsiya</h3>
               <div className="space-y-1">
                 <div className="text-sm font-semibold text-black">
-                  Module: {recommendation.title}
+                  Modul: {recommendation.title}
                 </div>
                 <div className="text-xs text-muted-foreground font-sans">
                   {recommendation.reason}
@@ -131,7 +132,7 @@ export default function Dashboard() {
                   onClick={() => setLocation(recommendation.path)}
                   className="bg-black text-white hover:bg-black/90 text-xs font-mono font-bold py-2 px-4 rounded-md"
                 >
-                  Start Module
+                  Modulni boshlash
                 </Button>
               </div>
             </CardContent>
@@ -139,7 +140,7 @@ export default function Dashboard() {
 
           {/* Training Modules Grid */}
           <section className="pt-4">
-            <h2 className="text-xl font-bold mb-4 font-sans text-black">Training Modules</h2>
+            <h2 className="text-xl font-bold mb-4 font-sans text-black">O'quv modullari</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {moduleProgress.map((mod) => (
                 <Card 
@@ -157,11 +158,11 @@ export default function Dashboard() {
                         <BookOpen className={`w-4 h-4 ${mod.unlocked ? 'text-black' : 'text-muted-foreground'}`} />
                       </div>
                       {mod.completed ? (
-                        <Badge variant="outline" className="border-black bg-black text-white font-mono text-[9px]">Done</Badge>
+                        <Badge variant="outline" className="border-black bg-black text-white font-mono text-[9px]">Tugatildi</Badge>
                       ) : mod.unlocked ? (
-                        <Badge variant="outline" className="border-black text-black font-mono text-[9px]">Open</Badge>
+                        <Badge variant="outline" className="border-black text-black font-mono text-[9px]">Ochilgan</Badge>
                       ) : (
-                        <Badge variant="outline" className="border-muted text-muted-foreground font-mono text-[9px]">Locked</Badge>
+                        <Badge variant="outline" className="border-muted text-muted-foreground font-mono text-[9px]">Yopilgan</Badge>
                       )}
                     </div>
                     <div>
@@ -182,7 +183,7 @@ export default function Dashboard() {
               onClick={resetProgress} 
               className="text-muted-foreground font-mono text-xs hover:text-black hover:bg-transparent"
             >
-              [ Reset System State ]
+              [ Tizim holatini tiklash ]
             </Button>
           </div>
         </div>
@@ -191,9 +192,9 @@ export default function Dashboard() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-black font-sans">Teacher Control Panel</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-black font-sans">O'qituvchi boshqaruv paneli</h1>
             <p className="text-muted-foreground mt-1 text-sm font-sans">
-              O'qituvchi boshqaruv markazi. Guruhni boshqarish va AI parametrlarini nazorat qilish.
+              Guruhni boshqarish va Fuzzy AI parametrlarini nazorat qilish.
             </p>
           </div>
 
@@ -237,7 +238,7 @@ export default function Dashboard() {
                   <span className="text-xs font-bold font-mono text-muted-foreground uppercase">AI Tizim Holati</span>
                   <ShieldCheck className="w-5 h-5 text-black" />
                 </div>
-                <div className="text-3xl font-bold font-mono mt-2 text-black text-green-600">Active</div>
+                <div className="text-3xl font-bold font-mono mt-2 text-black text-green-600">Faol</div>
               </CardContent>
             </Card>
           </div>

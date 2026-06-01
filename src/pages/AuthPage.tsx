@@ -76,7 +76,7 @@ export default function AuthPage() {
       toast({
         variant: "destructive",
         title: "Kirishda xatolik",
-        description: res.message || "Login yoki parol noto'g'ri!",
+        description: res.message || "Kirish nomi yoki parol noto'g'ri!",
       });
     }
   };
@@ -91,7 +91,7 @@ export default function AuthPage() {
           </div>
           <h1 className="text-2xl font-bold font-mono text-black">CyberAl Platform</h1>
           <p className="text-xs text-muted-foreground max-w-xs leading-normal">
-            Fuzzy AI va ANFIS asosidagi moslashuvchan kiberexavfsizlik ta'lim tizimi.
+            Fuzzy AI va ANFIS asosidagi moslashuvchan kiberxavfsizlik ta'lim tizimi.
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default function AuthPage() {
                 }`}
               >
                 <GraduationCap className="w-4 h-4" />
-                Student
+                O'quvchi
               </button>
               <button
                 onClick={() => {
@@ -127,7 +127,7 @@ export default function AuthPage() {
                 }`}
               >
                 <UserCheck className="w-4 h-4" />
-                Teacher
+                O'qituvchi
               </button>
             </div>
           </CardHeader>
@@ -230,7 +230,7 @@ export default function AuthPage() {
                 <form onSubmit={handleTeacherSubmit} className="space-y-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold font-mono text-muted-foreground uppercase tracking-wider block">
-                      Login
+                      Foydalanuvchi nomi
                     </label>
                     <input
                       type="text"
@@ -267,7 +267,7 @@ export default function AuthPage() {
                   <div className="text-[10px] text-muted-foreground leading-normal font-sans">
                     O'qituvchi hisobiga kirish uchun quyidagi ma'lumotlarni ishlating:
                     <div className="font-mono text-black mt-1 font-bold">
-                      Login: <span className="bg-[#f1f3f5] px-1 rounded">teacher</span> <br />
+                      Foydalanuvchi: <span className="bg-[#f1f3f5] px-1 rounded">teacher</span> <br />
                       Parol: <span className="bg-[#f1f3f5] px-1 rounded">teacher123</span>
                     </div>
                   </div>

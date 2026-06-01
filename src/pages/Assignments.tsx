@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
 import type { AssignmentQuestion } from "@/store/useAppStore";
+import { translateLevel } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,7 +151,7 @@ export default function Assignments() {
                       className="w-full text-sm border border-border/80 px-3 py-2.5 rounded-lg bg-[#f8f9fa] text-black outline-none focus:border-black transition font-mono"
                     >
                       {students.map(s => (
-                        <option key={s.id} value={s.id}>{s.name} ({s.level})</option>
+                        <option key={s.id} value={s.id}>{s.name} ({translateLevel(s.level)})</option>
                       ))}
                     </select>
                   </div>

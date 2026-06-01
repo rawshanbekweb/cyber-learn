@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { BookOpen, Shield, Cpu, BarChart3, GraduationCap, UserCheck, ShieldCheck, LogOut, User, ClipboardList, BookMarked } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
+import { translateLevel } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -51,7 +52,20 @@ export function Layout({ children }: { children: ReactNode }) {
             }`}
           >
             <BookOpen className="w-4 h-4 shrink-0" />
-            Learning
+            Ta'lim
+          </Link>
+
+          {/* Darslar (Lessons) - Teacher & Student */}
+          <Link
+            href="/lessons"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              location === "/lessons"
+                ? "bg-[#f1f3f5] text-black font-semibold"
+                : "text-muted-foreground hover:bg-[#f8f9fa] hover:text-black"
+            }`}
+          >
+            <BookMarked className="w-4 h-4 shrink-0" />
+            {userRole === "Teacher" ? "Darslar (Boshqaruv)" : "Darslar"}
           </Link>
 
           {/* Darslar (Lessons) - Teacher & Student */}
@@ -78,7 +92,7 @@ export function Layout({ children }: { children: ReactNode }) {
               }`}
             >
               <Shield className="w-4 h-4 shrink-0" />
-              Cybersecurity
+              Kiberxavfsizlik
             </Link>
           )}
 
@@ -92,7 +106,7 @@ export function Layout({ children }: { children: ReactNode }) {
             }`}
           >
             <Cpu className="w-4 h-4 shrink-0" />
-            AI Engine (Fuzzy/ANFIS)
+            AI dvigateli (Fuzzy/ANFIS)
           </Link>
 
           {/* Analytics */}
@@ -105,7 +119,7 @@ export function Layout({ children }: { children: ReactNode }) {
             }`}
           >
             <BarChart3 className="w-4 h-4 shrink-0" />
-            Analytics
+            Analitika
           </Link>
 
           {/* Topshiriqlar (Teacher only) */}
@@ -129,19 +143,19 @@ export function Layout({ children }: { children: ReactNode }) {
           {userRole === "Student" ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-muted-foreground">Level</span>
+                <span className="text-xs font-semibold text-muted-foreground">Daraja</span>
                 <Badge variant="outline" className="font-mono text-[10px] py-0 px-1.5 border-black/40 bg-black text-white">
-                  {currentLevel}
+                  {translateLevel(currentLevel)}
                 </Badge>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-muted-foreground">Readiness</span>
+                <span className="text-xs font-semibold text-muted-foreground">Tayyorgarlik</span>
                 <span className="text-xs font-mono font-bold">{(readinessScore * 100).toFixed(0)}%</span>
               </div>
             </div>
           ) : (
             <div className="text-[10px] font-mono text-muted-foreground text-center py-1">
-              Fuzzy AI Management Mode
+              Fuzzy AI boshqaruv rejimi
             </div>
           )}
 
