@@ -18,6 +18,7 @@ import Analytics from "@/pages/Analytics";
 import AuthPage from "@/pages/AuthPage";
 import Assignments from "@/pages/Assignments";
 import Lessons from "@/pages/Lessons";
+import { AIAssistant } from "@/components/AIAssistant";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ function App() {
           <Layout>
             <Router />
           </Layout>
+          <AIAssistant />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>
