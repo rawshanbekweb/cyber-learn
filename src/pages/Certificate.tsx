@@ -1,85 +1,219 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAppStore } from "@/store/useAppStore";
-import { Button } from "@/components/ui/button";
-import { Shield, Printer } from "lucide-react";
+import { Shield, Printer, Award } from "lucide-react";
+
+const neon = "hsl(150 100% 55%)";
 
 export default function Certificate() {
   const [, setLocation] = useLocation();
-  const { readinessScore, currentLevel } = useAppStore();
+  const { readinessScore, currentLevel, currentUser } = useAppStore();
 
   useEffect(() => {
-    if (readinessScore < 0.8) {
-      setLocation("/");
-    }
+    if (readinessScore < 0.8) setLocation("/");
   }, [readinessScore, setLocation]);
 
   if (readinessScore < 0.8) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-background certificate-container">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 certificate-container" style={{ background: "hsl(220 15% 4%)" }}>
       <div className="max-w-4xl w-full relative">
+        {/* Print button */}
         <div className="absolute top-4 right-4 z-10 print:hidden">
-          <Button onClick={() => window.print()} variant="outline" className="font-mono border-primary text-primary hover:bg-primary/10">
-            <Printer className="w-4 h-4 mr-2" /> Sertifikatni chop etish
-          </Button>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 rounded text-xs font-bold tracking-widest uppercase transition-all"
+            style={{
+              background: "hsl(150 100% 50% / 0.1)",
+              border: "1px solid hsl(150 100% 50% / 0.45)",
+              color: neon,
+              fontFamily: "JetBrains Mono, monospace",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = "hsl(150 100% 50% / 0.2)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 0 15px hsl(150 100% 50% / 0.3)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = "hsl(150 100% 50% / 0.1)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "none";
+            }}
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Sertifikatni Chop Etish
+          </button>
         </div>
 
-        <div className="border-4 border-primary/40 bg-card p-2 shadow-[0_0_50px_rgba(var(--primary),0.1)] glow-effect relative overflow-hidden">
-          
-          {/* Decorative hex pattern background */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{ 
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='100' viewBox='0 0 60 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 17.32v34.64L30 69.28 0 51.96V17.32zM15 26l15-8.66 15 8.66v17.32L30 52 15 43.34zM0 86.6L30 69.28l30 17.32V100H0z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-            backgroundSize: "40px" 
-          }} />
+        {/* Certificate frame */}
+        <div
+          className="relative overflow-hidden"
+          style={{
+            background: "hsl(220 18% 6%)",
+            border: "3px solid hsl(150 100% 50% / 0.4)",
+            boxShadow: "0 0 60px hsl(150 100% 50% / 0.15), inset 0 0 60px hsl(150 100% 50% / 0.03)",
+          }}
+        >
+          {/* Hex background pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='100' viewBox='0 0 60 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 17.32v34.64L30 69.28 0 51.96V17.32z' fill='none' stroke='%2300ff88' stroke-width='1'/%3E%3C/svg%3E")`,
+              backgroundSize: "40px",
+            }}
+          />
 
-          <div className="border border-primary/20 p-8 sm:p-16 text-center relative z-10 bg-background/80 backdrop-blur-sm">
-            
-            <div className="flex justify-center mb-8">
-              <Shield className="w-20 h-20 text-primary drop-shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+          {/* Top glow bar */}
+          <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(to right, transparent, ${neon}, transparent)` }} />
+          <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: `linear-gradient(to right, transparent, ${neon}, transparent)` }} />
+
+          {/* Corner accents */}
+          {[
+            "top-3 left-3 border-t-2 border-l-2",
+            "top-3 right-3 border-t-2 border-r-2",
+            "bottom-3 left-3 border-b-2 border-l-2",
+            "bottom-3 right-3 border-b-2 border-r-2",
+          ].map((cls, i) => (
+            <div key={i} className={`absolute w-6 h-6 ${cls}`} style={{ borderColor: "hsl(150 100% 55% / 0.7)" }} />
+          ))}
+
+          <div
+            className="relative z-10 p-8 sm:p-16 text-center"
+            style={{ border: "1px solid hsl(150 100% 50% / 0.15)", margin: "16px" }}
+          >
+            {/* Shield icon */}
+            <div className="flex justify-center mb-6">
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center glow-pulse"
+                style={{
+                  background: "hsl(150 100% 50% / 0.1)",
+                  border: "2px solid hsl(150 100% 50% / 0.5)",
+                }}
+              >
+                <Shield
+                  className="w-10 h-10"
+                  style={{
+                    color: neon,
+                    filter: "drop-shadow(0 0 12px hsl(150 100% 55% / 0.7))",
+                  }}
+                />
+              </div>
             </div>
 
-            <h2 className="text-primary font-mono text-sm tracking-[0.3em] uppercase mb-4">CyberLearn AI</h2>
-            
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold tracking-tight mb-8 text-foreground">
-              YUTUQ SERTIFIKATI
+            {/* Brand */}
+            <div
+              className="text-[10px] tracking-[0.4em] uppercase mb-3"
+              style={{ color: "hsl(150 60% 55%)", fontFamily: "JetBrains Mono, monospace" }}
+            >
+              CyberAl Platform — FUZZY/ANFIS AI
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-16" style={{ background: "hsl(150 100% 50% / 0.4)" }} />
+              <Award className="w-4 h-4" style={{ color: neon }} />
+              <div className="h-px w-16" style={{ background: "hsl(150 100% 50% / 0.4)" }} />
+            </div>
+
+            {/* Title */}
+            <h1
+              className="text-4xl sm:text-5xl font-bold tracking-widest uppercase mb-6"
+              style={{
+                fontFamily: "Orbitron, monospace",
+                color: neon,
+                textShadow: "0 0 30px hsl(150 100% 55% / 0.5), 0 0 60px hsl(150 100% 55% / 0.3)",
+              }}
+            >
+              Yutuq Sertifikati
             </h1>
 
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <div className="h-[1px] w-16 bg-primary/50" />
-              <div className="w-2 h-2 rotate-45 bg-primary" />
-              <div className="h-[1px] w-16 bg-primary/50" />
-            </div>
-
-            <p className="text-muted-foreground text-lg mb-2 font-mono">Ushbu sertifikatni oluvchining quyidagilarni muvaffaqiyatli tamomlaganini tasdiqlaydi:</p>
-            <p className="text-2xl font-bold mb-8 font-mono text-foreground">Moslashuvchan kiberxavfsizlik ta'lim platformasi</p>
-            
-            <p className="text-muted-foreground text-lg mb-2 font-mono">Mavzusi:</p>
-            <p className="text-3xl font-bold text-accent drop-shadow-[0_0_10px_rgba(var(--accent),0.3)] mb-12">
-              Kiberxavfsizlik bo'yicha yuqori malaka
+            <p className="text-sm mb-2" style={{ color: "hsl(150 40% 55%)", fontFamily: "JetBrains Mono, monospace" }}>
+              Ushbu sertifikat quyidagi shaxsga beriladi:
             </p>
 
-            <div className="grid sm:grid-cols-3 gap-8 items-end mt-16 max-w-3xl mx-auto">
-              <div className="border-t border-border/50 pt-2">
-                <p className="font-mono text-sm text-muted-foreground">Fuzzy mantiqiy motor</p>
+            {currentUser?.name && (
+              <div
+                className="text-2xl font-bold mb-4 tracking-wider"
+                style={{
+                  fontFamily: "Orbitron, monospace",
+                  color: "hsl(150 100% 80%)",
+                  textShadow: "0 0 15px hsl(150 100% 55% / 0.4)",
+                }}
+              >
+                {currentUser.name}
               </div>
-              
+            )}
+
+            <p className="text-sm mb-2" style={{ color: "hsl(150 40% 55%)", fontFamily: "JetBrains Mono, monospace" }}>
+              Muvaffaqiyatli tamomlagan:
+            </p>
+            <p
+              className="text-xl font-bold mb-2 tracking-wider"
+              style={{ fontFamily: "JetBrains Mono, monospace", color: "hsl(150 80% 75%)" }}
+            >
+              Moslashuvchan Kiberxavfsizlik Ta'lim Platformasi
+            </p>
+
+            <p className="text-sm mb-1" style={{ color: "hsl(150 40% 55%)", fontFamily: "JetBrains Mono, monospace" }}>
+              Yo'nalish:
+            </p>
+            <p
+              className="text-2xl font-bold mb-10 tracking-wider uppercase"
+              style={{
+                fontFamily: "Orbitron, monospace",
+                color: neon,
+                textShadow: "0 0 15px hsl(150 100% 55% / 0.5)",
+                fontSize: "1.2rem",
+              }}
+            >
+              Kiberxavfsizlik Bo'yicha Yuqori Malaka
+            </p>
+
+            {/* Score section */}
+            <div className="grid sm:grid-cols-3 gap-6 items-end max-w-2xl mx-auto">
               <div className="text-center">
-                <div className="text-5xl font-mono font-bold text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.4)] mb-2">
+                <div
+                  className="py-2"
+                  style={{ borderTop: "1px solid hsl(150 100% 50% / 0.3)" }}
+                >
+                  <div className="text-xs tracking-widest" style={{ color: "hsl(150 40% 50%)", fontFamily: "JetBrains Mono, monospace" }}>
+                    Fuzzy Mantiqiy Motor
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <div
+                  className="text-5xl font-bold mb-2"
+                  style={{
+                    fontFamily: "Orbitron, monospace",
+                    color: neon,
+                    textShadow: "0 0 20px hsl(150 100% 55% / 0.6)",
+                  }}
+                >
                   {(readinessScore * 100).toFixed(1)}%
                 </div>
-                <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Tayyorgarlik ko'rsatkichi</p>
+                <div className="text-[9px] tracking-widest uppercase" style={{ color: "hsl(150 40% 50%)", fontFamily: "JetBrains Mono, monospace" }}>
+                  Tayyorgarlik Ko'rsatkichi
+                </div>
               </div>
 
-              <div className="border-t border-border/50 pt-2">
-                <p className="font-mono text-sm text-foreground">{new Date().toLocaleDateString()}</p>
-                <p className="font-mono text-xs text-muted-foreground mt-1">Berilgan sana</p>
+              <div className="text-center">
+                <div
+                  className="py-2"
+                  style={{ borderTop: "1px solid hsl(150 100% 50% / 0.3)" }}
+                >
+                  <div className="text-sm font-bold" style={{ color: "hsl(150 80% 70%)", fontFamily: "JetBrains Mono, monospace" }}>
+                    {new Date().toLocaleDateString()}
+                  </div>
+                  <div className="text-[9px] tracking-widest mt-1" style={{ color: "hsl(150 40% 50%)", fontFamily: "JetBrains Mono, monospace" }}>
+                    Berilgan Sana
+                  </div>
+                </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
+
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           body * { visibility: hidden; }
