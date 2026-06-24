@@ -589,26 +589,49 @@ function TeacherView() {
                   </div>
                 )}
                 {previewLesson.fileUrl && (
-                  <div className="rounded-xl p-4 flex items-center gap-3 bg-blue-50/40 border border-blue-100/50">
-                    <Download className="w-5 h-5 text-blue-600 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-blue-600">
-                        Darslik Fayli
+                  previewLesson.fileName?.toLowerCase().endsWith(".pdf") ? (
+                    <div className="rounded-xl overflow-hidden border border-zinc-200">
+                      <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                        <FileText className="w-4 h-4 text-red-500 shrink-0" />
+                        <span className="text-xs font-semibold text-zinc-700 truncate flex-1">{previewLesson.fileName}</span>
+                        <a
+                          href={`${API_URL}${previewLesson.fileUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-bold text-primary hover:underline shrink-0"
+                        >
+                          Yangi tabda ↗
+                        </a>
                       </div>
-                      <a
-                        href={`${API_URL}${previewLesson.fileUrl}`}
-                        download={previewLesson.fileName}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline font-semibold break-all"
-                      >
-                        {previewLesson.fileName}
-                        {previewLesson.fileSize && (
-                          <span className="ml-1 text-zinc-400 font-normal">({formatFileSize(previewLesson.fileSize)})</span>
-                        )}
-                      </a>
+                      <iframe
+                        src={`${API_URL}${previewLesson.fileUrl}`}
+                        className="w-full"
+                        style={{ height: "520px" }}
+                        title={previewLesson.fileName}
+                      />
                     </div>
-                  </div>
+                  ) : (
+                    <div className="rounded-xl p-4 flex items-center gap-3 bg-blue-50/40 border border-blue-100/50">
+                      <Download className="w-5 h-5 text-blue-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                          Darslik Fayli
+                        </div>
+                        <a
+                          href={`${API_URL}${previewLesson.fileUrl}`}
+                          download={previewLesson.fileName}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline font-semibold break-all"
+                        >
+                          {previewLesson.fileName}
+                          {previewLesson.fileSize && (
+                            <span className="ml-1 text-zinc-400 font-normal">({formatFileSize(previewLesson.fileSize)})</span>
+                          )}
+                        </a>
+                      </div>
+                    </div>
+                  )
                 )}
                 {previewLesson.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-3 border-t border-zinc-100">
@@ -947,8 +970,33 @@ function StudentView() {
                   </div>
                 )}
 
-                {/* File Download */}
+                {/* File Viewer / Download */}
                 {selectedLesson.fileUrl && (
+                  selectedLesson.fileName?.toLowerCase().endsWith(".pdf") ? (
+                    <div className="rounded-2xl overflow-hidden border border-zinc-200">
+                      <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-50 border-b border-zinc-200">
+                        <FileText className="w-4 h-4 text-red-500 shrink-0" />
+                        <span className="text-xs font-semibold text-zinc-700 truncate flex-1">{selectedLesson.fileName}</span>
+                        {selectedLesson.fileSize && (
+                          <span className="text-[10px] text-zinc-400 shrink-0">{formatFileSize(selectedLesson.fileSize)}</span>
+                        )}
+                        <a
+                          href={`${API_URL}${selectedLesson.fileUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-bold text-primary hover:underline shrink-0"
+                        >
+                          Yangi tabda ↗
+                        </a>
+                      </div>
+                      <iframe
+                        src={`${API_URL}${selectedLesson.fileUrl}`}
+                        className="w-full"
+                        style={{ height: "560px" }}
+                        title={selectedLesson.fileName}
+                      />
+                    </div>
+                  ) : (
                   <div className="rounded-2xl p-4 flex items-center gap-3 bg-blue-50/40 border border-blue-100/50">
                     <Download className="w-5 h-5 text-blue-600 shrink-0" />
                     <div className="flex-1 min-w-0">
@@ -969,6 +1017,7 @@ function StudentView() {
                       </a>
                     </div>
                   </div>
+                  )
                 )}
 
                 {/* Tags */}
