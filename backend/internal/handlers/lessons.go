@@ -18,6 +18,7 @@ type LessonRequest struct {
 	Content     string   `json:"content"`
 	Category    string   `json:"category"`
 	Difficulty  string   `json:"difficulty"`
+	LessonType  string   `json:"lessonType"`
 	VideoURL    string   `json:"videoUrl"`
 	Tags        []string `json:"tags"`
 }
@@ -29,6 +30,7 @@ type LessonResponse struct {
 	Content        string     `json:"content"`
 	Category       string     `json:"category"`
 	Difficulty     string     `json:"difficulty"`
+	LessonType     string     `json:"lessonType"`
 	VideoURL       string     `json:"videoUrl"`
 	Tags           []string   `json:"tags"`
 	CreatedAt      time.Time  `json:"createdAt"`
@@ -57,6 +59,11 @@ func buildLessonResponse(l models.Lesson, currentUserID uint) LessonResponse {
 		readBy = []uint{}
 	}
 
+	lessonType := string(l.LessonType)
+	if lessonType == "" {
+		lessonType = "Nazariy"
+	}
+
 	return LessonResponse{
 		ID:             l.ID,
 		Title:          l.Title,
@@ -64,6 +71,7 @@ func buildLessonResponse(l models.Lesson, currentUserID uint) LessonResponse {
 		Content:        l.Content,
 		Category:       l.Category,
 		Difficulty:     string(l.Difficulty),
+		LessonType:     lessonType,
 		VideoURL:       l.VideoURL,
 		Tags:           tags,
 		CreatedAt:      l.CreatedAt,
@@ -99,12 +107,18 @@ func CreateLesson(c *gin.Context) {
 
 	tagsJSON, _ := json.Marshal(req.Tags)
 
+	lessonType := models.LessonType(req.LessonType)
+	if lessonType == "" {
+		lessonType = models.LessonTypeNazariy
+	}
+
 	lesson := models.Lesson{
 		Title:       req.Title,
 		Description: req.Description,
 		Content:     req.Content,
 		Category:    req.Category,
 		Difficulty:  models.Difficulty(req.Difficulty),
+		LessonType:  lessonType,
 		VideoURL:    req.VideoURL,
 		Tags:        string(tagsJSON),
 	}

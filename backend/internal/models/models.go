@@ -78,6 +78,13 @@ type Module struct {
 	OrderIndex  int    `gorm:"default:0" json:"orderIndex"`
 }
 
+type LessonType string
+
+const (
+	LessonTypeNazariy LessonType = "Nazariy"
+	LessonTypeAmaliy  LessonType = "Amaliy"
+)
+
 // Lesson created by teacher
 type Lesson struct {
 	gorm.Model
@@ -86,6 +93,7 @@ type Lesson struct {
 	Content     string     `json:"content"`
 	Category    string     `json:"category"`
 	Difficulty  Difficulty `json:"difficulty"`
+	LessonType  LessonType `gorm:"default:'Nazariy'" json:"lessonType"`
 	VideoURL    string     `json:"videoUrl"`
 	Tags        string     `json:"tags"` // JSON array stored as string
 	CreatedAt   time.Time  `json:"createdAt"`
@@ -101,16 +109,24 @@ type LessonRead struct {
 	ReadAt   time.Time `json:"readAt"`
 }
 
+type AssignmentType string
+
+const (
+	AssignmentTypeNazariy AssignmentType = "Nazariy"
+	AssignmentTypeAmaliy  AssignmentType = "Amaliy"
+)
+
 // Assignment created by teacher for a student
 type Assignment struct {
 	gorm.Model
-	Title          string    `gorm:"not null" json:"title"`
-	Description    string    `json:"description"`
-	StudentID      uint      `gorm:"not null" json:"studentId"`
-	StudentName    string    `json:"studentName"`
-	TargetModuleID uint      `gorm:"not null" json:"targetModuleId"`
-	Completed      bool      `gorm:"default:false" json:"completed"`
-	DateAssigned   time.Time `json:"dateAssigned"`
+	Title          string         `gorm:"not null" json:"title"`
+	Description    string         `json:"description"`
+	StudentID      uint           `gorm:"not null" json:"studentId"`
+	StudentName    string         `json:"studentName"`
+	TargetModuleID uint           `gorm:"not null" json:"targetModuleId"`
+	AssignmentType AssignmentType `gorm:"default:'Nazariy'" json:"assignmentType"`
+	Completed      bool           `gorm:"default:false" json:"completed"`
+	DateAssigned   time.Time      `json:"dateAssigned"`
 
 	Questions []AssignmentQuestion `gorm:"foreignKey:AssignmentID" json:"questions"`
 }

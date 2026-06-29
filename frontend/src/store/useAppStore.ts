@@ -30,6 +30,7 @@ export interface Lesson {
   content: string;
   category: string;
   difficulty: "Boshlang'ich" | "O'rta" | "Yuqori";
+  lessonType: "Nazariy" | "Amaliy";
   videoUrl: string;
   tags: string[];
   createdAt: string;
@@ -49,6 +50,7 @@ export interface Assignment {
   dateAssigned: string;
   questions: AssignmentQuestion[];
   description?: string;
+  assignmentType: "Nazariy" | "Amaliy";
 }
 
 export interface Student {
@@ -94,7 +96,7 @@ export interface AppState {
   submitAssessment: (metrics: FuzzyMetrics) => void;
   completeModule: (moduleId: number) => void;
   updateFuzzyWeights: (weights: Partial<FuzzyWeights>) => void;
-  addAssignment: (title: string, studentId: number, targetModuleId: number, questions?: AssignmentQuestion[], description?: string) => void;
+  addAssignment: (title: string, studentId: number, targetModuleId: number, questions?: AssignmentQuestion[], description?: string, assignmentType?: "Nazariy" | "Amaliy") => void;
   completeAssignment: (assignmentId: number) => void;
   addLesson: (lesson: Omit<Lesson, 'id' | 'createdAt' | 'readByStudents'>) => void;
   deleteLesson: (lessonId: number) => void;
@@ -388,7 +390,7 @@ export const useAppStore = create<AppState>()(
         };
       }),
 
-      addAssignment: (title, studentId, targetModuleId, questions = [], description = "") => set((state) => {
+      addAssignment: (title, studentId, targetModuleId, questions = [], description = "", assignmentType = "Nazariy") => set((state) => {
         const student = state.students.find(s => s.id === studentId);
         if (!student) return {};
 
@@ -402,6 +404,7 @@ export const useAppStore = create<AppState>()(
           dateAssigned: new Date().toISOString().split('T')[0],
           questions,
           description,
+          assignmentType,
         };
 
         // If assigning to current student, unlock the module immediately for them
@@ -443,6 +446,7 @@ export const useAppStore = create<AppState>()(
         lessons: [
           {
             id: Date.now(),
+            lessonType: "Nazariy" as const,
             ...lessonData,
             createdAt: new Date().toISOString(),
             readByStudents: [],

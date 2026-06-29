@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   BookOpen, Plus, Trash2, ChevronDown, ChevronUp,
-  GraduationCap, PlayCircle, CheckCircle2, Clock,
+  PlayCircle, CheckCircle2, Clock,
   FileText, Shield, Wifi, Lock, Server, Globe,
-  X, Eye, BookMarked, Layers, Send, UploadCloud, Paperclip, Download
+  X, Eye, BookMarked, Layers, Send, UploadCloud, Paperclip, Download,
+  FlaskConical, BookText
 } from "lucide-react";
 
 const categoryIcons: Record<string, React.ElementType> = {
@@ -49,6 +50,7 @@ function TeacherView() {
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("Asoslar");
   const [difficulty, setDifficulty] = useState<"Boshlang'ich" | "O'rta" | "Yuqori">("Boshlang'ich");
+  const [lessonType, setLessonType] = useState<"Nazariy" | "Amaliy">("Nazariy");
   const [videoUrl, setVideoUrl] = useState("");
   const [tags, setTags] = useState("");
   const [expandedLesson, setExpandedLesson] = useState<number | null>(null);
@@ -118,6 +120,7 @@ function TeacherView() {
       content: content.trim(),
       category,
       difficulty,
+      lessonType,
       videoUrl: videoUrl.trim(),
       tags: tags.split(",").map(t => t.trim()).filter(Boolean),
       fileUrl: fileData?.url,
@@ -133,6 +136,7 @@ function TeacherView() {
     setTitle(""); setDescription(""); setContent("");
     setVideoUrl(""); setTags(""); setCategory("Asoslar");
     setDifficulty("Boshlang'ich");
+    setLessonType("Nazariy");
     setSelectedFile(null);
     setUploadProgress(0);
     setShowForm(false);
@@ -207,6 +211,36 @@ function TeacherView() {
             </div>
             <div className="p-6">
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Lesson Type Toggle */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    Dars turi *
+                  </label>
+                  <div className="flex gap-2">
+                    {(["Nazariy", "Amaliy"] as const).map(type => {
+                      const isActive = lessonType === type;
+                      const Icon = type === "Nazariy" ? BookText : FlaskConical;
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setLessonType(type)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                            isActive
+                              ? type === "Nazariy"
+                                ? "bg-indigo-50 border-primary text-primary shadow-sm"
+                                : "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
+                              : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {type}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Title */}
                   <div className="space-y-1.5">
@@ -424,6 +458,19 @@ function TeacherView() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-sm text-zinc-800">{lesson.title}</span>
+                          <Badge
+                            variant="outline"
+                            className={`font-semibold text-[9px] rounded-lg ${
+                              (lesson.lessonType ?? "Nazariy") === "Nazariy"
+                                ? "border-indigo-200 text-primary bg-indigo-50"
+                                : "border-emerald-200 text-emerald-700 bg-emerald-50"
+                            }`}
+                          >
+                            {(lesson.lessonType ?? "Nazariy") === "Nazariy"
+                              ? <><BookText className="w-2.5 h-2.5 mr-1 inline" />Nazariy</>
+                              : <><FlaskConical className="w-2.5 h-2.5 mr-1 inline" />Amaliy</>
+                            }
+                          </Badge>
                           <Badge
                             variant="outline"
                             className={`font-semibold text-[9px] rounded-lg ${difficultyColors[lesson.difficulty]}`}
@@ -660,14 +707,16 @@ function TeacherView() {
 function StudentView() {
   const { lessons, markLessonRead } = useAppStore();
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [activeTab, setActiveTab] = useState<"Nazariy" | "Amaliy">("Nazariy");
   const [filterCategory, setFilterCategory] = useState("Barchasi");
   const [filterDifficulty, setFilterDifficulty] = useState("Barchasi");
   const { toast } = useToast();
 
-  const categories = ["Barchasi", ...Array.from(new Set(lessons.map(l => l.category)))];
+  const tabLessons = lessons.filter(l => (l.lessonType ?? "Nazariy") === activeTab);
+  const categories = ["Barchasi", ...Array.from(new Set(tabLessons.map(l => l.category)))];
   const difficulties = ["Barchasi", "Boshlang'ich", "O'rta", "Yuqori"];
 
-  const filtered = lessons.filter(l => {
+  const filtered = tabLessons.filter(l => {
     const catMatch = filterCategory === "Barchasi" || l.category === filterCategory;
     const difMatch = filterDifficulty === "Barchasi" || l.difficulty === filterDifficulty;
     return catMatch && difMatch;
@@ -678,7 +727,7 @@ function StudentView() {
     toast({ title: "✅ O'qildi!", description: `"${title}" darsi o'qilgan deb belgilandi.` });
   };
 
-  const readCount = lessons.filter(l =>
+  const readCount = tabLessons.filter(l =>
     l.readByStudents?.includes(useAppStore.getState().currentUser?.id ?? -1)
   ).length;
 
@@ -695,12 +744,42 @@ function StudentView() {
         </p>
       </div>
 
+      {/* Nazariy / Amaliy Tabs */}
+      <div className="flex rounded-2xl border border-zinc-200 bg-zinc-50 p-1 gap-1">
+        {(["Nazariy", "Amaliy"] as const).map(tab => {
+          const isActive = activeTab === tab;
+          const Icon = tab === "Nazariy" ? BookText : FlaskConical;
+          const tabCount = lessons.filter(l => (l.lessonType ?? "Nazariy") === tab).length;
+          return (
+            <button
+              key={tab}
+              onClick={() => { setActiveTab(tab); setFilterCategory("Barchasi"); setFilterDifficulty("Barchasi"); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                isActive
+                  ? tab === "Nazariy"
+                    ? "bg-white border border-primary/20 text-primary shadow-sm"
+                    : "bg-white border border-emerald-200 text-emerald-700 shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab}
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                isActive
+                  ? tab === "Nazariy" ? "bg-primary/10 text-primary" : "bg-emerald-100 text-emerald-700"
+                  : "bg-zinc-200 text-zinc-500"
+              }`}>{tabCount}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { icon: BookOpen, label: "Jami Darslar", value: lessons.length, color: 'hsl(var(--primary))' },
+          { icon: BookOpen, label: "Jami Darslar", value: tabLessons.length, color: 'hsl(var(--primary))' },
           { icon: CheckCircle2, label: "O'qildi", value: readCount, color: 'hsl(142 76% 36%)' },
-          { icon: PlayCircle, label: "Video", value: lessons.filter(l => l.videoUrl).length, color: 'hsl(280 84% 60%)' },
+          { icon: PlayCircle, label: "Video", value: tabLessons.filter(l => l.videoUrl).length, color: 'hsl(280 84% 60%)' },
         ].map(({ icon: Icon, label, value, color }) => (
           <div
             key={label}
@@ -721,7 +800,7 @@ function StudentView() {
       </div>
 
       {/* Filters */}
-      {lessons.length > 0 && (
+      {tabLessons.length > 0 && (
         <div className="flex gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">
@@ -773,12 +852,12 @@ function StudentView() {
       )}
 
       {/* Lesson Cards */}
-      {lessons.length === 0 ? (
+      {tabLessons.length === 0 ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-12 flex flex-col items-center gap-3 shadow-2xs">
-          <BookOpen className="w-10 h-10 text-zinc-300" />
+          {activeTab === "Nazariy" ? <BookText className="w-10 h-10 text-zinc-300" /> : <FlaskConical className="w-10 h-10 text-zinc-300" />}
           <p className="text-sm text-center text-zinc-500 font-medium">
-            Hali hech qanday dars qo'shilmagan.<br />
-            <span className="text-xs">O'qituvchi dars qo'shganda bu yerda ko'rinadi.</span>
+            Hali hech qanday {activeTab.toLowerCase()} dars qo'shilmagan.<br />
+            <span className="text-xs">O'qituvchi {activeTab.toLowerCase()} dars qo'shganda bu yerda ko'rinadi.</span>
           </p>
         </div>
       ) : filtered.length === 0 ? (
@@ -904,6 +983,19 @@ function StudentView() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
+                      <Badge
+                        variant="outline"
+                        className={`font-semibold text-[9px] rounded-lg ${
+                          (selectedLesson.lessonType ?? "Nazariy") === "Nazariy"
+                            ? "border-indigo-200 text-primary bg-indigo-50"
+                            : "border-emerald-200 text-emerald-700 bg-emerald-50"
+                        }`}
+                      >
+                        {(selectedLesson.lessonType ?? "Nazariy") === "Nazariy"
+                          ? <><BookText className="w-2.5 h-2.5 mr-1 inline" />Nazariy</>
+                          : <><FlaskConical className="w-2.5 h-2.5 mr-1 inline" />Amaliy</>
+                        }
+                      </Badge>
                       <Badge
                         variant="outline"
                         className={`font-semibold text-[9px] rounded-lg ${difficultyColors[selectedLesson.difficulty]}`}

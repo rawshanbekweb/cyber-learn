@@ -23,6 +23,7 @@ type AssignmentRequest struct {
 	Description    string                      `json:"description"`
 	StudentID      uint                        `json:"studentId" binding:"required"`
 	TargetModuleID uint                        `json:"targetModuleId" binding:"required"`
+	AssignmentType string                      `json:"assignmentType"`
 	Questions      []AssignmentQuestionRequest `json:"questions"`
 }
 
@@ -40,12 +41,17 @@ type AssignmentResponse struct {
 	StudentID      uint                         `json:"studentId"`
 	StudentName    string                       `json:"studentName"`
 	TargetModuleID uint                         `json:"targetModuleId"`
+	AssignmentType string                       `json:"assignmentType"`
 	Completed      bool                         `json:"completed"`
 	DateAssigned   time.Time                    `json:"dateAssigned"`
 	Questions      []AssignmentQuestionResponse `json:"questions"`
 }
 
 func buildAssignmentResponse(a models.Assignment) AssignmentResponse {
+	assignmentType := string(a.AssignmentType)
+	if assignmentType == "" {
+		assignmentType = "Nazariy"
+	}
 	resp := AssignmentResponse{
 		ID:             a.ID,
 		Title:          a.Title,
@@ -53,6 +59,7 @@ func buildAssignmentResponse(a models.Assignment) AssignmentResponse {
 		StudentID:      a.StudentID,
 		StudentName:    a.StudentName,
 		TargetModuleID: a.TargetModuleID,
+		AssignmentType: assignmentType,
 		Completed:      a.Completed,
 		DateAssigned:   a.DateAssigned,
 		Questions:      []AssignmentQuestionResponse{},
@@ -141,12 +148,18 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
+	assignmentType := models.AssignmentType(req.AssignmentType)
+	if assignmentType == "" {
+		assignmentType = models.AssignmentTypeNazariy
+	}
+
 	assignment := models.Assignment{
 		Title:          req.Title,
 		Description:    req.Description,
 		StudentID:      req.StudentID,
 		StudentName:    student.Name,
 		TargetModuleID: req.TargetModuleID,
+		AssignmentType: assignmentType,
 		Completed:      false,
 		DateAssigned:   time.Now(),
 	}

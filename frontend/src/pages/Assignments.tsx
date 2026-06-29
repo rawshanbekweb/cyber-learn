@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, CheckCircle2, Clock, BookOpen,
   ChevronDown, ChevronUp, HelpCircle, GraduationCap,
-  ClipboardList, User, Send, X, CircleDot
+  ClipboardList, User, Send, X, CircleDot,
+  BookText, FlaskConical
 } from "lucide-react";
 
 export default function Assignments() {
@@ -17,10 +18,12 @@ export default function Assignments() {
 
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
+  const [assignmentType, setAssignmentType] = useState<"Nazariy" | "Amaliy">("Nazariy");
   const [selectedStudent, setSelectedStudent] = useState<number>(students[0]?.id ?? 1);
   const [selectedModule, setSelectedModule] = useState<number>(1);
   const [questions, setQuestions] = useState<AssignmentQuestion[]>([]);
   const [expandedAssignment, setExpandedAssignment] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"Nazariy" | "Amaliy">("Nazariy");
 
   const [newQuestion, setNewQuestion] = useState("");
   const [newOptions, setNewOptions] = useState(["", "", "", ""]);
@@ -54,20 +57,22 @@ export default function Assignments() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskTitle.trim()) return;
-    addAssignment(taskTitle, selectedStudent, selectedModule, questions, taskDescription);
+    addAssignment(taskTitle, selectedStudent, selectedModule, questions, taskDescription, assignmentType);
     toast({
       title: "✅ Topshiriq yuborildi!",
-      description: `O'quvchiga ${questions.length > 0 ? questions.length + " ta savol bilan " : ""}topshiriq muvaffaqiyatli biriktirildi.`,
+      description: `O'quvchiga ${questions.length > 0 ? questions.length + " ta savol bilan " : ""}${assignmentType} topshiriq muvaffaqiyatli biriktirildi.`,
     });
     setTaskTitle("");
     setTaskDescription("");
+    setAssignmentType("Nazariy");
     setQuestions([]);
     setSelectedStudent(students[0]?.id ?? 1);
     setSelectedModule(1);
   };
 
-  const pending = assignments.filter(a => !a.completed);
-  const done = assignments.filter(a => a.completed);
+  const tabAssignments = assignments.filter(a => (a.assignmentType ?? "Nazariy") === activeTab);
+  const pending = tabAssignments.filter(a => !a.completed);
+  const done = tabAssignments.filter(a => a.completed);
 
   const pageVariants = {
     hidden: { opacity: 0, y: 16 },
@@ -118,6 +123,36 @@ export default function Assignments() {
             {/* Card Body */}
             <div className="p-6">
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Topshiriq turi */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    Topshiriq turi *
+                  </label>
+                  <div className="flex gap-2">
+                    {(["Nazariy", "Amaliy"] as const).map(type => {
+                      const isActive = assignmentType === type;
+                      const Icon = type === "Nazariy" ? BookText : FlaskConical;
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setAssignmentType(type)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                            isActive
+                              ? type === "Nazariy"
+                                ? "bg-indigo-50 border-primary text-primary shadow-sm"
+                                : "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm"
+                              : "bg-white border-zinc-200 text-zinc-500 hover:border-zinc-300"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {type}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Topshiriq nomi */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
@@ -332,6 +367,36 @@ export default function Assignments() {
 
         {/* ── RIGHT: Assignment List ── */}
         <div className="space-y-6">
+          {/* Tabs */}
+          <div className="flex rounded-2xl border border-zinc-200 bg-zinc-50 p-1 gap-1">
+            {(["Nazariy", "Amaliy"] as const).map(tab => {
+              const isActive = activeTab === tab;
+              const Icon = tab === "Nazariy" ? BookText : FlaskConical;
+              const tabCount = assignments.filter(a => (a.assignmentType ?? "Nazariy") === tab).length;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                    isActive
+                      ? tab === "Nazariy"
+                        ? "bg-white border border-primary/20 text-primary shadow-sm"
+                        : "bg-white border border-emerald-200 text-emerald-700 shadow-sm"
+                      : "text-zinc-400 hover:text-zinc-600"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab}
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                    isActive
+                      ? tab === "Nazariy" ? "bg-primary/10 text-primary" : "bg-emerald-100 text-emerald-700"
+                      : "bg-zinc-200 text-zinc-500"
+                  }`}>{tabCount}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Pending */}
           <div className="rounded-2xl border border-zinc-200 bg-white shadow-xs overflow-hidden">
             <div className="px-5 py-4 flex items-center gap-2.5 bg-zinc-50/50 border-b border-zinc-200">
@@ -425,6 +490,19 @@ function AssignmentCard({
             <span className={`font-bold text-xs ${assignment.completed ? "text-zinc-500" : "text-zinc-800"}`}>
               {assignment.title}
             </span>
+            {(() => {
+              const type = assignment.assignmentType ?? "Nazariy";
+              const Icon = type === "Nazariy" ? BookText : FlaskConical;
+              return (
+                <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full border font-bold uppercase tracking-wider ${
+                  type === "Nazariy"
+                    ? "bg-indigo-50 border-indigo-100 text-primary"
+                    : "bg-emerald-50 border-emerald-100 text-emerald-700"
+                }`}>
+                  <Icon className="w-2.5 h-2.5" />{type}
+                </span>
+              );
+            })()}
             {assignment.completed ? (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold uppercase tracking-wider">
                 Bajarildi
