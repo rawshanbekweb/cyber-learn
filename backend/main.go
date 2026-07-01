@@ -22,9 +22,8 @@ func main() {
 	}
 
 	r := gin.Default()
-	r.MaxMultipartMemory = 64 << 20 // 64 MB for large file uploads
+	r.MaxMultipartMemory = 64 << 20
 
-	// CORS — allow frontend dev server and production origins
 	allowedOrigins := []string{"http://localhost:5173", "http://localhost:3000", "http://localhost:4173"}
 	if origin := os.Getenv("ALLOWED_ORIGIN"); origin != "" {
 		allowedOrigins = append(allowedOrigins, origin)
