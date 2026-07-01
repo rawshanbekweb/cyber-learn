@@ -8,6 +8,7 @@ import (
 	_ "image/png"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"cyberai-backend/internal/database"
@@ -23,10 +24,7 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-const (
-	certificateTemplatePath  = "assets/certificate-template.png"
-	certificateEligibleScore = 0.8
-)
+const certificateTemplatePath = "assets/certificate-template.png"
 
 var certificateSkills = []string{
 	"Onlaynda xavfsiz bo'lish asoslarini, kiberxavfsizlik nima ekanini va uning ta'sirini tushuntiradi.",
@@ -36,9 +34,16 @@ var certificateSkills = []string{
 	"Kiberxavfsizlik sohasidagi turli karyera imkoniyatlarini o'rganish uchun manba va resurslardan foydalanadi.",
 }
 
-// GET /api/certificate — generates and returns a downloadable PNG certificate
-// for the currently logged-in student.
-func GetCertificate(c *gin.Context) {
+// GET /api/modules/:id/certificate — generates and returns a downloadable PNG
+// certificate for the currently logged-in student's completion of one module.
+func GetModuleCertificate(c *gin.Context) {
+	idStr := c.Param("id")
+	moduleID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Noto'g'ri ID"})
+		return
+	}
+
 	userID, _ := c.Get("userID")
 
 	var user models.User
@@ -52,19 +57,25 @@ func GetCertificate(c *gin.Context) {
 		return
 	}
 
-	if user.FuzzyScore < certificateEligibleScore {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Sertifikat olish uchun tayyorgarlik ko'rsatkichingiz kamida 80% bo'lishi kerak"})
+	var mod models.Module
+	if err := database.DB.First(&mod, moduleID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Modul topilmadi"})
 		return
 	}
 
-	moduleTitle := highestCompletedModuleTitle(userID)
+	var mp models.ModuleProgress
+	if err := database.DB.Where("user_id = ? AND module_id = ?", userID, moduleID).First(&mp).Error; err != nil || !mp.Completed {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Sertifikat olish uchun avval ushbu modulni testdan o'tib tugatishingiz kerak"})
+		return
+	}
 
 	var cert models.Certificate
-	if err := database.DB.Where("user_id = ?", userID).First(&cert).Error; err != nil {
+	if err := database.DB.Where("user_id = ? AND module_id = ?", userID, moduleID).First(&cert).Error; err != nil {
 		cert = models.Certificate{
 			UserID:           user.ID,
+			ModuleID:         mod.ID,
 			VerificationCode: uuid.New().String()[:8],
-			ModuleTitle:      moduleTitle,
+			ModuleTitle:      mod.Title,
 			Score:            user.FuzzyScore,
 			IssuedAt:         time.Now(),
 		}
@@ -77,7 +88,7 @@ func GetCertificate(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Disposition", `attachment; filename="sertifikat.png"`)
+	c.Header("Content-Disposition", `attachment; filename="sertifikat-`+strconv.FormatUint(moduleID, 10)+`.png"`)
 	c.Data(http.StatusOK, "image/png", png)
 }
 
@@ -100,21 +111,6 @@ func VerifyCertificate(c *gin.Context) {
 		"moduleTitle": cert.ModuleTitle,
 		"issuedAt":    cert.IssuedAt,
 	})
-}
-
-func highestCompletedModuleTitle(userID interface{}) string {
-	var progresses []models.ModuleProgress
-	database.DB.Where("user_id = ? AND completed = ?", userID, true).Preload("Module").Find(&progresses)
-
-	title := "Kiberxavfsizlik Diagnostikasi"
-	highestOrder := -1
-	for _, p := range progresses {
-		if p.Module.OrderIndex > highestOrder {
-			highestOrder = p.Module.OrderIndex
-			title = p.Module.Title
-		}
-	}
-	return title
 }
 
 func verifyURL(code string) string {

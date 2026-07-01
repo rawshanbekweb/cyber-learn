@@ -79,6 +79,7 @@ func main() {
 			protected.GET("/modules", handlers.GetModules)
 			protected.GET("/modules/:id", handlers.GetModule)
 			protected.POST("/modules/:id/complete", handlers.CompleteModule)
+			protected.GET("/modules/:id/certificate", handlers.GetModuleCertificate)
 
 			// Assessment (fuzzy)
 			protected.POST("/assessment/submit", handlers.SubmitAssessment)
@@ -97,9 +98,6 @@ func main() {
 
 			// Analytics
 			protected.GET("/analytics", handlers.GetAnalytics)
-
-			// Certificate (generates the student's own certificate)
-			protected.GET("/certificate", handlers.GetCertificate)
 
 			// Fuzzy weights
 			protected.GET("/fuzzy-weights", handlers.GetFuzzyWeights)

@@ -98,12 +98,29 @@ func GetModule(c *gin.Context) {
 	})
 }
 
-// POST /api/modules/:id/complete — Student completes a module
+const modulePassingScore = 0.7
+
+type CompleteModuleRequest struct {
+	Score float64 `json:"score" binding:"required,min=0,max=1"`
+}
+
+// POST /api/modules/:id/complete — Student completes a module by passing its quiz
 func CompleteModule(c *gin.Context) {
 	idStr := c.Param("id")
 	moduleID, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Noto'g'ri ID"})
+		return
+	}
+
+	var req CompleteModuleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Test natijasi (score) yuborilishi shart"})
+		return
+	}
+
+	if req.Score < modulePassingScore {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Modulni tugatish uchun testda kamida 70% ball to'plash kerak"})
 		return
 	}
 

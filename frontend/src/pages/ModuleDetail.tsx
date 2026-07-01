@@ -7,9 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Wifi, Lock, Server, ArrowLeft, Terminal, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Shield, Wifi, Lock, Server, ArrowLeft, Terminal, AlertTriangle, CheckCircle2, XCircle, Download, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { translateLevel } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const PASSING_SCORE = 0.7;
 
 const moduleData = {
   1: {
@@ -61,13 +65,16 @@ export default function ModuleDetail() {
   const { moduleProgress, completeModule, submitAssessment } = useAppStore();
   const modProgress = moduleProgress.find(m => m.id === id);
   const data = moduleData[id as keyof typeof moduleData];
-  
+  const { toast } = useToast();
+
   const [quizActive, setQuizActive] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [timeLeft, setTimeLeft] = useState(30);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [quizResult, setQuizResult] = useState<any>(null);
+  const [quizPassed, setQuizPassed] = useState<boolean | null>(null);
+  const [downloadingCert, setDownloadingCert] = useState(false);
 
   useEffect(() => {
     if (!quizActive || quizResult) return;
@@ -105,7 +112,7 @@ export default function ModuleDetail() {
     finalAnswers.forEach((ans, i) => {
       if (ans === data.quiz[i].correct) correct++;
     });
-    
+
     const knowledge = correct / data.quiz.length;
     const errors = (data.quiz.length - correct) / data.quiz.length;
     const speed = Math.max(0, timeLeft / 30);
@@ -114,6 +121,37 @@ export default function ModuleDetail() {
     submitAssessment({ knowledge, errors, speed });
     setQuizResult(result);
     setQuizActive(false);
+
+    const passed = knowledge >= PASSING_SCORE;
+    setQuizPassed(passed);
+    if (passed) completeModule(id);
+  };
+
+  const downloadCertificate = async () => {
+    setDownloadingCert(true);
+    try {
+      const res = await fetch(`${API_URL}/api/modules/${id}/certificate`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Sertifikatni yuklab bo'lmadi");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sertifikat-${id}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({
+        title: "Rasmiy sertifikatni yuklab bo'lmadi",
+        description: err instanceof Error
+          ? err.message
+          : "Bu funksiya hozircha faqat backend'da ro'yxatdan o'tgan hisoblar uchun ishlaydi.",
+      });
+    } finally {
+      setDownloadingCert(false);
+    }
   };
 
   if (!modProgress || !data || !modProgress.unlocked) {
@@ -168,30 +206,29 @@ export default function ModuleDetail() {
 
           {quizResult && (
             <Alert className={`border-l-4 ${
-              quizResult.level === 'Advanced' ? 'border-primary bg-primary/10 text-primary' : 
-              quizResult.level === 'Intermediate' ? 'border-accent bg-accent/10 text-accent' : 
-              'border-destructive bg-destructive/10 text-destructive'
+              quizPassed ? 'border-primary bg-primary/10 text-primary' : 'border-destructive bg-destructive/10 text-destructive'
             }`}>
               <AlertTitle className="font-mono mb-2 flex items-center gap-2">
-                <Terminal className="w-4 h-4" /> Baholash natijasi: {translateLevel(quizResult.level)}
+                {quizPassed ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                {quizPassed ? "Test topshirildi!" : "Test topshirilmadi"} — Daraja: {translateLevel(quizResult.level)}
               </AlertTitle>
               <AlertDescription>
-                {quizResult.level === 'Beginner' && "Amaliyotni davom ettiring. Ushbu modulni takrorlang."}
-                {quizResult.level === 'Intermediate' && "Yaxshi rivojlanish. Keyingi modulga o‘ting."}
-                {quizResult.level === 'Advanced' && "Modul muvaffaqiyatli egallandi. Keyingi modul ochildi."}
+                {quizPassed
+                  ? "Tabriklaymiz! Siz talab qilingan 70% chegarasidan o'tdingiz va modul tugatildi deb belgilandi."
+                  : "Afsuski, 70% chegarasidan o'ta olmadingiz. Materialni qayta ko'rib chiqib, testni qayta urinib ko'ring."}
               </AlertDescription>
             </Alert>
           )}
 
-          {!quizActive && !quizResult && (
-            <Button 
-              size="lg" 
-              className="w-full font-mono text-lg glow-effect h-14" 
+          {!quizActive && !modProgress.completed && (
+            <Button
+              size="lg"
+              className="w-full font-mono text-lg glow-effect h-14"
               onClick={handleStartQuiz}
               data-testid="button-simulate-attack"
             >
               <Terminal className="w-5 h-5 mr-2" />
-              Hujumni simulyatsiya qilish / Test
+              {quizResult ? "Qayta urinish" : "Hujumni simulyatsiya qilish / Test"}
             </Button>
           )}
 
@@ -251,15 +288,16 @@ export default function ModuleDetail() {
             </CardContent>
           </Card>
 
-          {!modProgress.completed && (
-            <Button 
-              variant="outline" 
-              className="w-full font-mono text-muted-foreground hover:text-accent hover:border-accent border-dashed border-2" 
-              onClick={() => completeModule(id)}
-              data-testid="button-mark-complete"
+          {modProgress.completed && (
+            <Button
+              variant="outline"
+              className="w-full font-mono text-accent hover:border-accent border-dashed border-2"
+              onClick={downloadCertificate}
+              disabled={downloadingCert}
+              data-testid="button-download-certificate"
             >
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Tugatildi deb belgilash
+              {downloadingCert ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+              Sertifikatni yuklab olish
             </Button>
           )}
         </div>

@@ -152,10 +152,11 @@ type FuzzyWeights struct {
 	IntermediateThreshold float64 `gorm:"default:0.7" json:"intermediateThreshold"`
 }
 
-// Certificate records a course-completion certificate issued to a student
+// Certificate records a per-module completion certificate issued to a student
 type Certificate struct {
 	gorm.Model
-	UserID           uint      `gorm:"uniqueIndex;not null" json:"userId"`
+	UserID           uint      `gorm:"uniqueIndex:idx_user_module_cert;not null" json:"userId"`
+	ModuleID         uint      `gorm:"uniqueIndex:idx_user_module_cert;not null" json:"moduleId"`
 	VerificationCode string    `gorm:"uniqueIndex;not null" json:"verificationCode"`
 	ModuleTitle      string    `json:"moduleTitle"`
 	Score            float64   `json:"score"`

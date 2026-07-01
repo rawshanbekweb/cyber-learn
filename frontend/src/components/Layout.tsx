@@ -24,7 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/ai-engine", icon: Cpu, label: "AI Dvigateli (ANFIS)", show: true },
     { href: "/analytics", icon: BarChart3, label: "Analitika", show: true },
     { href: "/rankings", icon: Trophy, label: "Reyting", show: true },
-    { href: "/certificate", icon: Award, label: "Sertifikat", show: userRole === "Student" && readinessScore >= 0.8 },
+    { href: "/certificate", icon: Award, label: "Sertifikatlar", show: userRole === "Student" },
     { href: "/assignments", icon: ClipboardList, label: "Topshiriqlar", show: userRole === "Teacher" },
   ];
 
