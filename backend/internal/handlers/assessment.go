@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math"
 	"net/http"
 
 	"cyberai-backend/internal/database"
@@ -8,6 +9,7 @@ import (
 	"cyberai-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type AssessmentRequest struct {
@@ -23,6 +25,12 @@ func SubmitAssessment(c *gin.Context) {
 	var req AssessmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Foydalanuvchi topilmadi"})
 		return
 	}
 
@@ -54,6 +62,11 @@ func SubmitAssessment(c *gin.Context) {
 		"last_fuzzy_rule2":          result.Rule2,
 		"last_fuzzy_rule3":          result.Rule3,
 		"has_fuzzy_result":          true,
+	}
+	// Diagnostic test XP bonus is only awarded once — retaking the test
+	// (e.g. after a teacher adjusts fuzzy weights) must not re-add it.
+	if !user.HasCompletedInitialTest {
+		updates["xp"] = gorm.Expr("xp + ?", int(math.Round(result.Score*100)))
 	}
 	database.DB.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
 

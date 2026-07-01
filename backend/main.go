@@ -52,6 +52,9 @@ func main() {
 		// File upload (public — teachers upload lesson materials)
 		api.POST("/upload", handlers.UploadFile)
 
+		// Rankings (public leaderboard)
+		api.GET("/rankings", handlers.GetRankings)
+
 		// Auth (public)
 		auth := api.Group("/auth")
 		{

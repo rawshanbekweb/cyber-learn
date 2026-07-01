@@ -8,6 +8,7 @@ import (
 	"cyberai-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // GET /api/modules
@@ -134,7 +135,10 @@ func CompleteModule(c *gin.Context) {
 		Where("user_id = ? AND completed = ?", userID, true).
 		Count(&completedCount)
 	database.DB.Model(&models.User{}).Where("id = ?", userID).
-		Update("completed_modules_count", completedCount)
+		Updates(map[string]interface{}{
+			"completed_modules_count": completedCount,
+			"xp":                      gorm.Expr("xp + ?", 100),
+		})
 
 	// Unlock next module if exists
 	var nextModule models.Module

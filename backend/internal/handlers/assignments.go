@@ -10,6 +10,7 @@ import (
 	"cyberai-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type AssignmentQuestionRequest struct {
@@ -219,5 +220,7 @@ func CompleteAssignment(c *gin.Context) {
 	}
 
 	database.DB.Model(&assignment).Update("completed", true)
+	database.DB.Model(&models.User{}).Where("id = ?", userID).
+		Update("xp", gorm.Expr("xp + ?", 50))
 	c.JSON(http.StatusOK, gin.H{"message": "Topshiriq muvaffaqiyatli bajarildi!"})
 }

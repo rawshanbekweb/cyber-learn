@@ -10,6 +10,7 @@ import (
 	"cyberai-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type LessonRequest struct {
@@ -188,6 +189,8 @@ func MarkLessonRead(c *gin.Context) {
 		ReadAt:   time.Now(),
 	}
 	database.DB.Create(&lr)
+	database.DB.Model(&models.User{}).Where("id = ?", userID).
+		Update("xp", gorm.Expr("xp + ?", 20))
 
 	c.JSON(http.StatusOK, gin.H{"message": "Dars o'qilgan deb belgilandi"})
 }

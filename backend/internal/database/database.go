@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"math"
 	"os"
 
 	"cyberai-backend/internal/models"
@@ -159,6 +160,7 @@ func seed() {
 				LastFuzzyScore:          ds.fuzzyScore,
 				LastFuzzyLevel:          ds.level,
 				HasFuzzyResult:          true,
+				XP:                      len(ds.completedMods)*100 + int(math.Round(ds.fuzzyScore*100)),
 			}
 			DB.Create(&student)
 

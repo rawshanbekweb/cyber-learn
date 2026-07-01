@@ -45,6 +45,8 @@ type User struct {
 	Speed                  float64 `json:"speed"`
 	Errors                 float64 `json:"errors"`
 	HasCompletedInitialTest bool   `gorm:"default:false" json:"hasCompletedInitialTest"`
+	XP                     int     `gorm:"default:0" json:"xp"`
+	Avatar                 string  `json:"avatar"`
 
 	// Fuzzy result (stored as separate fields)
 	LastFuzzyScore float64 `json:"lastFuzzyScore"`
