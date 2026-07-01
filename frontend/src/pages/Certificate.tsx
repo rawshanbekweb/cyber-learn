@@ -1,11 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAppStore } from "@/store/useAppStore";
-import { Shield, Printer, Award } from "lucide-react";
+import { Shield, Printer, Award, Download, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export default function Certificate() {
   const [, setLocation] = useLocation();
   const { readinessScore, currentLevel, currentUser } = useAppStore();
+  const { toast } = useToast();
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (readinessScore < 0.8) setLocation("/");
@@ -13,11 +18,46 @@ export default function Certificate() {
 
   if (readinessScore < 0.8) return null;
 
+  const downloadOfficialCertificate = async () => {
+    setDownloading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/certificate`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Sertifikatni yuklab bo'lmadi");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "sertifikat.png";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({
+        title: "Rasmiy sertifikatni yuklab bo'lmadi",
+        description: err instanceof Error
+          ? err.message
+          : "Bu funksiya hozircha faqat backend'da ro'yxatdan o'tgan hisoblar uchun ishlaydi.",
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 certificate-container font-sans bg-slate-50">
       <div className="max-w-4xl w-full relative">
-        {/* Print button */}
-        <div className="absolute top-4 right-4 z-10 print:hidden">
+        {/* Print + download buttons */}
+        <div className="absolute top-4 right-4 z-10 print:hidden flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={downloadOfficialCertificate}
+            disabled={downloading}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide uppercase bg-primary text-white shadow-xs hover:bg-primary/90 transition-all duration-150 disabled:opacity-60"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            Rasmiy Sertifikat (PNG)
+          </button>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide uppercase bg-white border border-zinc-200 shadow-xs text-zinc-700 hover:bg-zinc-50 transition-all duration-150"
