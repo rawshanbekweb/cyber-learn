@@ -446,7 +446,6 @@ export const useAppStore = create<AppState>()(
         lessons: [
           {
             id: Date.now(),
-            lessonType: "Nazariy" as const,
             ...lessonData,
             createdAt: new Date().toISOString(),
             readByStudents: [],
