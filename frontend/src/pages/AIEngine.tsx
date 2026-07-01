@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
 import { Slider } from "@/components/ui/slider";
@@ -33,15 +34,24 @@ function AIEnginePanel({ children, className = "", title, icon: Icon, desc }: {
 }
 
 export default function AIEngine() {
-  const { userRole, fuzzyWeights, updateFuzzyWeights, hasCompletedInitialTest, currentLevel, readinessScore } = useAppStore();
+  const { userRole, fuzzyWeights, updateFuzzyWeights, hasCompletedInitialTest, currentLevel, readinessScore, fetchFuzzyWeights, saveFuzzyWeights } = useAppStore();
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchFuzzyWeights();
+  }, []);
 
   const handleWeightChange = (key: keyof typeof fuzzyWeights, value: number) => {
     updateFuzzyWeights({ [key]: value });
   };
 
-  const saveWeights = () => {
-    toast({ title: "SOZLAMALAR SAQLANDI", description: "Fuzzy AI Engine parametrlari muvaffaqiyatli yangilandi." });
+  const saveWeights = async () => {
+    const res = await saveFuzzyWeights();
+    if (res.success) {
+      toast({ title: "SOZLAMALAR SAQLANDI", description: "Fuzzy AI Engine parametrlari muvaffaqiyatli yangilandi." });
+    } else {
+      toast({ variant: "destructive", title: "SAQLASHDA XATOLIK", description: res.message });
+    }
   };
 
   const restoreDefaults = () => {

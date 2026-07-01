@@ -187,6 +187,8 @@ export interface AppState {
   submitAssessment: (metrics: FuzzyMetrics) => void;
   completeModule: (moduleId: number) => void;
   updateFuzzyWeights: (weights: Partial<FuzzyWeights>) => void;
+  fetchFuzzyWeights: () => Promise<void>;
+  saveFuzzyWeights: () => Promise<{ success: boolean; message?: string }>;
   fetchStudents: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
   addAssignment: (title: string, studentId: number, targetModuleId: number, questions?: AssignmentQuestion[], description?: string, assignmentType?: "Nazariy" | "Amaliy") => Promise<{ success: boolean; message?: string }>;
@@ -561,6 +563,32 @@ export const useAppStore = create<AppState>()(
           ...extraState
         };
       }),
+
+      fetchFuzzyWeights: async () => {
+        const { token } = get();
+        try {
+          const data = await api.get<FuzzyWeights>("/api/fuzzy-weights", token);
+          set({
+            fuzzyWeights: {
+              rule1Weight: data.rule1Weight,
+              rule2Weight: data.rule2Weight,
+              rule3Weight: data.rule3Weight,
+              beginnerThreshold: data.beginnerThreshold,
+              intermediateThreshold: data.intermediateThreshold,
+            },
+          });
+        } catch { /* keep current local weights if this fails */ }
+      },
+
+      saveFuzzyWeights: async () => {
+        const { token, fuzzyWeights } = get();
+        try {
+          await api.put<FuzzyWeights>("/api/fuzzy-weights", fuzzyWeights, token);
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Saqlashda xatolik" };
+        }
+      },
 
       fetchStudents: async () => {
         const { token } = get();

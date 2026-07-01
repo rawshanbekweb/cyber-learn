@@ -26,6 +26,19 @@ async function post<T>(path: string, payload: unknown, token?: string | null): P
   return body as T;
 }
 
+async function put<T>(path: string, payload: unknown, token?: string | null): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || `So'rov muvaffaqiyatsiz tugadi: ${res.status}`);
+  }
+  return body as T;
+}
+
 async function del<T>(path: string, token?: string | null): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "DELETE",
@@ -47,6 +60,6 @@ async function downloadFile(path: string, token?: string | null): Promise<Blob> 
   return res.blob();
 }
 
-const api = { get, post, del, downloadFile };
+const api = { get, post, put, del, downloadFile };
 
 export default api;
