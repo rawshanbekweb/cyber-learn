@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
 import type { Lesson } from "@/store/useAppStore";
@@ -114,7 +114,7 @@ function TeacherView() {
       setIsUploading(false);
     }
 
-    addLesson({
+    const res = await addLesson({
       title: title.trim(),
       description: description.trim(),
       content: content.trim(),
@@ -127,6 +127,11 @@ function TeacherView() {
       fileName: fileData?.name,
       fileSize: fileData?.size,
     });
+
+    if (!res.success) {
+      toast({ variant: "destructive", title: "❌ Dars saqlanmadi", description: res.message });
+      return;
+    }
 
     toast({
       title: "✅ Dars qo'shildi!",
@@ -520,7 +525,15 @@ function TeacherView() {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={e => { e.stopPropagation(); deleteLesson(lesson.id); toast({ title: "Dars o'chirildi" }); }}
+                        onClick={async e => {
+                          e.stopPropagation();
+                          const res = await deleteLesson(lesson.id);
+                          if (res.success) {
+                            toast({ title: "Dars o'chirildi" });
+                          } else {
+                            toast({ variant: "destructive", title: "Xatolik", description: res.message });
+                          }
+                        }}
                         className="p-1.5 border border-zinc-200 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
                         title="O'chirish"
                       >
@@ -722,9 +735,13 @@ function StudentView() {
     return catMatch && difMatch;
   });
 
-  const handleMarkRead = (lessonId: number, title: string) => {
-    markLessonRead(lessonId);
-    toast({ title: "✅ O'qildi!", description: `"${title}" darsi o'qilgan deb belgilandi.` });
+  const handleMarkRead = async (lessonId: number, title: string) => {
+    const res = await markLessonRead(lessonId);
+    if (res.success) {
+      toast({ title: "✅ O'qildi!", description: `"${title}" darsi o'qilgan deb belgilandi.` });
+    } else {
+      toast({ variant: "destructive", title: "Xatolik", description: res.message });
+    }
   };
 
   const readCount = tabLessons.filter(l =>
@@ -1162,7 +1179,11 @@ function StudentView() {
 // MAIN EXPORT
 // ─────────────────────────────────────────────
 export default function Lessons() {
-  const { userRole } = useAppStore();
+  const { userRole, fetchLessons } = useAppStore();
+
+  useEffect(() => {
+    fetchLessons();
+  }, []);
 
   return (
     <motion.div initial="hidden" animate="visible" variants={pageVariants}>

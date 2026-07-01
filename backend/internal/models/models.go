@@ -99,6 +99,9 @@ type Lesson struct {
 	VideoURL    string     `json:"videoUrl"`
 	Tags        string     `json:"tags"` // JSON array stored as string
 	CreatedAt   time.Time  `json:"createdAt"`
+	FileURL     string     `json:"fileUrl"`
+	FileName    string     `json:"fileName"`
+	FileSize    int64      `json:"fileSize"`
 
 	// Many-to-many: students who read this lesson
 	ReadByStudents []User `gorm:"many2many:lesson_reads;" json:"readByStudents,omitempty"`

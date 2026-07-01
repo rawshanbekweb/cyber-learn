@@ -76,6 +76,23 @@ interface BackendAssignment {
   questions: BackendAssignmentQuestion[] | null;
 }
 
+interface BackendLesson {
+  id: number;
+  title: string;
+  description: string;
+  content: string;
+  category: string;
+  difficulty: "Boshlang'ich" | "O'rta" | "Yuqori";
+  lessonType: "Nazariy" | "Amaliy";
+  videoUrl: string;
+  tags: string[] | null;
+  createdAt: string;
+  readByStudents: number[] | null;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+}
+
 export interface FuzzyMetrics {
   knowledge: number;
   errors: number;
@@ -174,9 +191,10 @@ export interface AppState {
   fetchAssignments: () => Promise<void>;
   addAssignment: (title: string, studentId: number, targetModuleId: number, questions?: AssignmentQuestion[], description?: string, assignmentType?: "Nazariy" | "Amaliy") => Promise<{ success: boolean; message?: string }>;
   completeAssignment: (assignmentId: number) => Promise<{ success: boolean; message?: string }>;
-  addLesson: (lesson: Omit<Lesson, 'id' | 'createdAt' | 'readByStudents'>) => void;
-  deleteLesson: (lessonId: number) => void;
-  markLessonRead: (lessonId: number) => void;
+  fetchLessons: () => Promise<void>;
+  addLesson: (lesson: Omit<Lesson, 'id' | 'createdAt' | 'readByStudents'>) => Promise<{ success: boolean; message?: string }>;
+  deleteLesson: (lessonId: number) => Promise<{ success: boolean; message?: string }>;
+  markLessonRead: (lessonId: number) => Promise<{ success: boolean; message?: string }>;
   resetProgress: () => void;
 }
 
@@ -314,6 +332,25 @@ function backendAssignmentToAssignment(a: BackendAssignment): Assignment {
     })),
     description: a.description,
     assignmentType: a.assignmentType,
+  };
+}
+
+function backendLessonToLesson(l: BackendLesson): Lesson {
+  return {
+    id: l.id,
+    title: l.title,
+    description: l.description,
+    content: l.content,
+    category: l.category,
+    difficulty: l.difficulty,
+    lessonType: l.lessonType,
+    videoUrl: l.videoUrl,
+    tags: l.tags ?? [],
+    createdAt: l.createdAt,
+    readByStudents: l.readByStudents ?? [],
+    fileUrl: l.fileUrl,
+    fileName: l.fileName,
+    fileSize: l.fileSize,
   };
 }
 
@@ -581,33 +618,54 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      addLesson: (lessonData) => set((state) => ({
-        lessons: [
-          {
-            id: Date.now(),
-            ...lessonData,
-            createdAt: new Date().toISOString(),
-            readByStudents: [],
-          },
-          ...state.lessons,
-        ],
-      })),
+      fetchLessons: async () => {
+        const { token } = get();
+        try {
+          const data = await api.get<BackendLesson[]>("/api/lessons", token);
+          set({ lessons: data.map(backendLessonToLesson) });
+        } catch { /* keep existing local list if this fails */ }
+      },
 
-      deleteLesson: (lessonId) => set((state) => ({
-        lessons: state.lessons.filter(l => l.id !== lessonId),
-      })),
+      addLesson: async (lessonData) => {
+        const { token } = get();
+        try {
+          const created = await api.post<BackendLesson>("/api/lessons", lessonData, token);
+          set((state) => ({ lessons: [backendLessonToLesson(created), ...state.lessons] }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Dars yaratishda xatolik" };
+        }
+      },
 
-      markLessonRead: (lessonId) => set((state) => {
-        const userId = state.currentUser?.id;
-        if (!userId) return {};
-        return {
-          lessons: state.lessons.map(l =>
-            l.id === lessonId && !l.readByStudents.includes(userId)
-              ? { ...l, readByStudents: [...l.readByStudents, userId] }
-              : l
-          ),
-        };
-      }),
+      deleteLesson: async (lessonId) => {
+        const { token } = get();
+        try {
+          await api.del(`/api/lessons/${lessonId}`, token);
+          set((state) => ({ lessons: state.lessons.filter(l => l.id !== lessonId) }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Darsni o'chirishda xatolik" };
+        }
+      },
+
+      markLessonRead: async (lessonId) => {
+        const { token, currentUser } = get();
+        const userId = currentUser?.id;
+        if (!userId) return { success: false, message: "Tizimga kirilmagan" };
+        try {
+          await api.post(`/api/lessons/${lessonId}/read`, {}, token);
+          set((state) => ({
+            lessons: state.lessons.map(l =>
+              l.id === lessonId && !l.readByStudents.includes(userId)
+                ? { ...l, readByStudents: [...l.readByStudents, userId] }
+                : l
+            ),
+          }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Xatolik yuz berdi" };
+        }
+      },
 
       resetProgress: () => set(initialState),
     }),

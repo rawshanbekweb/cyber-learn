@@ -22,6 +22,9 @@ type LessonRequest struct {
 	LessonType  string   `json:"lessonType"`
 	VideoURL    string   `json:"videoUrl"`
 	Tags        []string `json:"tags"`
+	FileURL     string   `json:"fileUrl"`
+	FileName    string   `json:"fileName"`
+	FileSize    int64    `json:"fileSize"`
 }
 
 type LessonResponse struct {
@@ -37,6 +40,9 @@ type LessonResponse struct {
 	CreatedAt      time.Time  `json:"createdAt"`
 	ReadByStudents []uint     `json:"readByStudents"`
 	IsRead         bool       `json:"isRead"`
+	FileURL        string     `json:"fileUrl,omitempty"`
+	FileName       string     `json:"fileName,omitempty"`
+	FileSize       int64      `json:"fileSize,omitempty"`
 }
 
 func buildLessonResponse(l models.Lesson, currentUserID uint) LessonResponse {
@@ -78,6 +84,9 @@ func buildLessonResponse(l models.Lesson, currentUserID uint) LessonResponse {
 		CreatedAt:      l.CreatedAt,
 		ReadByStudents: readBy,
 		IsRead:         isRead,
+		FileURL:        l.FileURL,
+		FileName:       l.FileName,
+		FileSize:       l.FileSize,
 	}
 }
 
@@ -122,6 +131,9 @@ func CreateLesson(c *gin.Context) {
 		LessonType:  lessonType,
 		VideoURL:    req.VideoURL,
 		Tags:        string(tagsJSON),
+		FileURL:     req.FileURL,
+		FileName:    req.FileName,
+		FileSize:    req.FileSize,
 	}
 
 	if err := database.DB.Create(&lesson).Error; err != nil {

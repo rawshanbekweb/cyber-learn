@@ -26,6 +26,18 @@ async function post<T>(path: string, payload: unknown, token?: string | null): P
   return body as T;
 }
 
+async function del<T>(path: string, token?: string | null): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || `So'rov muvaffaqiyatsiz tugadi: ${res.status}`);
+  }
+  return body as T;
+}
+
 async function downloadFile(path: string, token?: string | null): Promise<Blob> {
   const res = await fetch(`${API_URL}${path}`, { headers: authHeaders(token) });
   if (!res.ok) {
@@ -35,6 +47,6 @@ async function downloadFile(path: string, token?: string | null): Promise<Blob> 
   return res.blob();
 }
 
-const api = { get, post, downloadFile };
+const api = { get, post, del, downloadFile };
 
 export default api;
