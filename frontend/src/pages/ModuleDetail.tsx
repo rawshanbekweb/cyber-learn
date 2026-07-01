@@ -304,8 +304,8 @@ export default function ModuleDetail() {
 
           {modProgress.completed && (
             <Button
-              variant="outline"
-              className="w-full font-mono text-accent hover:border-accent border-dashed border-2"
+              size="lg"
+              className="w-full font-mono h-12 bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-sm"
               onClick={downloadCertificate}
               disabled={downloadingCert}
               data-testid="button-download-certificate"

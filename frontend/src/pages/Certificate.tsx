@@ -75,7 +75,7 @@ export default function Certificate() {
               <button
                 onClick={() => downloadCertificate(m.id)}
                 disabled={downloadingId === m.id}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold text-white bg-primary hover:bg-primary/90 transition-all duration-150 disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 shadow-sm transition-all duration-150 disabled:opacity-60"
               >
                 {downloadingId === m.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                 Sertifikatni yuklab olish
