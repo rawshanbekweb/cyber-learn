@@ -184,7 +184,7 @@ export default function Rankings() {
     return s && l;
   }), [sorted, search, levelFilter]);
 
-  const top3 = sorted.filter((e) => e.rank <= 3);
+  const top3 = filtered.filter((e) => e.rank <= 3);
   const rest = filtered.filter((e) => e.rank > 3);
   const pageCount = Math.max(1, Math.ceil(rest.length / PAGE_SIZE));
   const pageData = rest.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -347,7 +347,7 @@ export default function Rankings() {
       )}
 
       {/* Empty state */}
-      {pageData.length === 0 && search && (
+      {filtered.length === 0 && search && (
         <Card className="text-center py-12 px-6 text-zinc-400">
           <div className="text-3xl mb-2">🔍</div>
           <div>"{search}" — o'quvchi topilmadi</div>
