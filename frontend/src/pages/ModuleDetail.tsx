@@ -11,8 +11,8 @@ import { Shield, Wifi, Lock, Server, ArrowLeft, Terminal, AlertTriangle, CheckCi
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { translateLevel } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/api";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const PASSING_SCORE = 0.7;
 
 const moduleData = {
@@ -62,7 +62,7 @@ export default function ModuleDetail() {
   const [match, params] = useRoute("/module/:id");
   const id = params?.id ? parseInt(params.id) : 1;
   
-  const { moduleProgress, completeModule, submitAssessment } = useAppStore();
+  const { moduleProgress, completeModule, submitAssessment, token } = useAppStore();
   const modProgress = moduleProgress.find(m => m.id === id);
   const data = moduleData[id as keyof typeof moduleData];
   const { toast } = useToast();
@@ -107,7 +107,7 @@ export default function ModuleDetail() {
     }
   };
 
-  const handleFinishQuiz = (finalAnswers = answers) => {
+  const handleFinishQuiz = async (finalAnswers = answers) => {
     let correct = 0;
     finalAnswers.forEach((ans, i) => {
       if (ans === data.quiz[i].correct) correct++;
@@ -125,17 +125,31 @@ export default function ModuleDetail() {
     const passed = knowledge >= PASSING_SCORE;
     setQuizPassed(passed);
     if (passed) completeModule(id);
+
+    // Best-effort backend sync so the level/unlocks the certificate check
+    // relies on stay consistent with what the student sees locally.
+    try {
+      await api.post("/api/assessment/submit", { knowledge, errors, speed }, token);
+    } catch { /* non-blocking */ }
+
+    if (passed) {
+      try {
+        await api.post(`/api/modules/${id}/complete`, { score: knowledge }, token);
+      } catch (err) {
+        toast({
+          title: "Sertifikat serverga saqlanmadi",
+          description: err instanceof Error
+            ? err.message
+            : "Modul mahalliy ravishda tugatildi, lekin serverga yozib bo'lmadi.",
+        });
+      }
+    }
   };
 
   const downloadCertificate = async () => {
     setDownloadingCert(true);
     try {
-      const res = await fetch(`${API_URL}/api/modules/${id}/certificate`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Sertifikatni yuklab bo'lmadi");
-      }
-      const blob = await res.blob();
+      const blob = await api.downloadFile(`/api/modules/${id}/certificate`, token);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

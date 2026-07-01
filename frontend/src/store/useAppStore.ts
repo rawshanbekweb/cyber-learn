@@ -2,6 +2,43 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { runFuzzyEngine } from '../lib/fuzzyEngine';
 import type { FuzzyResult, FuzzyWeights } from '../lib/fuzzyEngine';
+import api from '../lib/api';
+
+interface BackendFuzzyResult {
+  score: number;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  rule1: number;
+  rule2: number;
+  rule3: number;
+}
+
+interface BackendUser {
+  id: number;
+  name: string;
+  age: number;
+  role: "Student" | "Teacher";
+  diagnosticScore: number;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  fuzzyScore: number;
+  completedModulesCount: number;
+  speed: number;
+  errors: number;
+  hasCompletedInitialTest: boolean;
+  hasFuzzyResult: boolean;
+  lastFuzzyResult: BackendFuzzyResult | null;
+}
+
+interface BackendAuthResponse {
+  token: string;
+  user: BackendUser;
+}
+
+interface BackendModuleProgress {
+  id: number;
+  title: string;
+  unlocked: boolean;
+  completed: boolean;
+}
 
 export interface FuzzyMetrics {
   knowledge: number;
@@ -77,6 +114,7 @@ export interface UserSession {
 
 export interface AppState {
   currentUser: UserSession | null;
+  token: string | null;
   userRole: "Student" | "Teacher";
   hasCompletedInitialTest: boolean;
   fuzzyMetrics: FuzzyMetrics;
@@ -88,9 +126,9 @@ export interface AppState {
   assignments: Assignment[];
   students: Student[];
   lessons: Lesson[];
-  
-  loginUser: (name: string, parol: string, role: "Student" | "Teacher") => { success: boolean; message?: string };
-  registerStudent: (name: string, age: number) => { success: boolean; message?: string };
+
+  loginUser: (name: string, parol: string, role: "Student" | "Teacher") => Promise<{ success: boolean; message?: string }>;
+  registerStudent: (name: string, age: number) => Promise<{ success: boolean; message?: string }>;
   logoutUser: () => void;
   setRole: (role: "Student" | "Teacher") => void;
   submitAssessment: (metrics: FuzzyMetrics) => void;
@@ -179,8 +217,34 @@ const initialStudents: Student[] = [
   },
 ];
 
+function backendUserToStudent(u: BackendUser, moduleProgress: ModuleProgress[]): Student {
+  return {
+    id: u.id,
+    name: u.name,
+    age: u.age,
+    diagnosticScore: u.diagnosticScore,
+    level: u.level,
+    fuzzyScore: u.fuzzyScore,
+    completedModulesCount: u.completedModulesCount,
+    speed: u.speed,
+    errors: u.errors,
+    hasCompletedInitialTest: u.hasCompletedInitialTest,
+    moduleProgress,
+    lastFuzzyResult: u.hasFuzzyResult && u.lastFuzzyResult ? u.lastFuzzyResult : null,
+  };
+}
+
+function upsertStudent(students: Student[], student: Student): Student[] {
+  const idx = students.findIndex(s => s.id === student.id);
+  if (idx === -1) return [...students, student];
+  const copy = students.slice();
+  copy[idx] = student;
+  return copy;
+}
+
 const initialState = {
   currentUser: null,
+  token: null,
   userRole: "Student" as const,
   hasCompletedInitialTest: false,
   fuzzyMetrics: { knowledge: 0, errors: 0, speed: 0 },
@@ -199,76 +263,72 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       ...initialState,
       
-      loginUser: (name, parol, role) => {
-        const state = get();
-        if (role === "Teacher") {
-          if (name.toLowerCase() === "teacher" && parol === "teacher123") {
-            set({ 
-              currentUser: { id: 100, name: "Teacher Account", age: 35, role: "Teacher" },
-              userRole: "Teacher"
-            });
-            return { success: true };
-          }
-          return { success: false, message: "Parol yoki login xato!" };
-        } else {
-          // Log in as student
-          const student = state.students.find(s => s.name.toLowerCase() === name.toLowerCase());
-          if (student) {
+      loginUser: async (name, parol, role) => {
+        try {
+          const data = await api.post<BackendAuthResponse>("/api/auth/login", { name, password: parol, role });
+          const u = data.user;
+
+          if (u.role === "Teacher") {
             set({
-              currentUser: { id: student.id, name: student.name, age: student.age, role: "Student" },
-              userRole: "Student",
-              hasCompletedInitialTest: student.hasCompletedInitialTest,
-              currentLevel: student.level,
-              readinessScore: student.fuzzyScore,
-              moduleProgress: student.moduleProgress,
-              lastFuzzyResult: student.lastFuzzyResult,
-              fuzzyMetrics: { knowledge: student.diagnosticScore, errors: student.errors, speed: student.speed }
+              currentUser: { id: u.id, name: u.name, age: u.age, role: "Teacher" },
+              userRole: "Teacher",
+              token: data.token,
             });
             return { success: true };
           }
-          return { success: false, message: "Bunday o'quvchi topilmadi. Iltimos ro'yxatdan o'ting!" };
+
+          let moduleProgress: ModuleProgress[] = initialModules;
+          try {
+            moduleProgress = await api.get<BackendModuleProgress[]>("/api/students/me/progress", data.token);
+          } catch { /* keep local defaults if this fails */ }
+
+          set((state) => ({
+            currentUser: { id: u.id, name: u.name, age: u.age, role: "Student" },
+            userRole: "Student",
+            token: data.token,
+            hasCompletedInitialTest: u.hasCompletedInitialTest,
+            currentLevel: u.level,
+            readinessScore: u.fuzzyScore,
+            fuzzyMetrics: { knowledge: u.diagnosticScore, errors: u.errors, speed: u.speed },
+            lastFuzzyResult: u.hasFuzzyResult && u.lastFuzzyResult ? u.lastFuzzyResult : null,
+            moduleProgress,
+            students: upsertStudent(state.students, backendUserToStudent(u, moduleProgress)),
+          }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Login yoki parol noto'g'ri!" };
         }
       },
-      
-      registerStudent: (name, age) => {
-        const state = get();
-        const exists = state.students.some(s => s.name.toLowerCase() === name.toLowerCase());
-        if (exists) {
-          return { success: false, message: "Ushbu ismdagi o'quvchi allaqachon mavjud!" };
+
+      registerStudent: async (name, age) => {
+        try {
+          const data = await api.post<BackendAuthResponse>("/api/auth/register", { name, age });
+          const u = data.user;
+
+          let moduleProgress: ModuleProgress[] = initialModules;
+          try {
+            moduleProgress = await api.get<BackendModuleProgress[]>("/api/students/me/progress", data.token);
+          } catch { /* keep local defaults if this fails */ }
+
+          set((state) => ({
+            currentUser: { id: u.id, name: u.name, age: u.age, role: "Student" },
+            userRole: "Student",
+            token: data.token,
+            hasCompletedInitialTest: false,
+            currentLevel: "Beginner" as const,
+            readinessScore: 0,
+            lastFuzzyResult: null,
+            fuzzyMetrics: { knowledge: 0, errors: 0, speed: 0 },
+            moduleProgress,
+            students: upsertStudent(state.students, backendUserToStudent(u, moduleProgress)),
+          }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Ro'yxatdan o'tishda xatolik" };
         }
-
-        const newId = Date.now();
-        const newStudent: Student = {
-          id: newId,
-          name,
-          age,
-          diagnosticScore: 0,
-          level: "Beginner",
-          fuzzyScore: 0,
-          completedModulesCount: 0,
-          speed: 0,
-          errors: 0,
-          hasCompletedInitialTest: false,
-          moduleProgress: initialModules,
-          lastFuzzyResult: null
-        };
-
-        set((state) => ({
-          students: [...state.students, newStudent],
-          currentUser: { id: newId, name, age, role: "Student" },
-          userRole: "Student",
-          hasCompletedInitialTest: false,
-          currentLevel: "Beginner",
-          readinessScore: 0,
-          moduleProgress: initialModules,
-          lastFuzzyResult: null,
-          fuzzyMetrics: { knowledge: 0, errors: 0, speed: 0 }
-        }));
-
-        return { success: true };
       },
 
-      logoutUser: () => set({ currentUser: null }),
+      logoutUser: () => set({ currentUser: null, token: null }),
       
       setRole: (role) => set({ userRole: role }),
       

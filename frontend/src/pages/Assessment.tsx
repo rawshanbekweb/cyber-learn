@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
 import { translateLevel } from "@/lib/utils";
 import { Shield, Clock, ChevronRight, CheckCircle, AlertTriangle } from "lucide-react";
+import api from "@/lib/api";
 
 const questions = [
   { q: "Kiberxavfsizlikda CIA nimaning qisqartmasi?", correct: 0, options: ["Maxfiylik, Butunlik, Mavjudlik", "Markaziy Razvedka Agentligi", "Kompyuter Ma'lumotlariga Kirish", "Kiber Infratuzilma Arxitekturasi"] },
@@ -18,7 +19,7 @@ const questions = [
 
 export default function Assessment() {
   const [, setLocation] = useLocation();
-  const { submitAssessment, lastFuzzyResult } = useAppStore();
+  const { submitAssessment, lastFuzzyResult, token } = useAppStore();
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -52,6 +53,9 @@ export default function Assessment() {
     const speed = Math.max(0, timeLeft / 60);
     submitAssessment({ knowledge, errors, speed });
     setIsFinished(true);
+
+    // Best-effort backend sync so module unlocks stay consistent server-side.
+    api.post("/api/assessment/submit", { knowledge, errors, speed }, token).catch(() => {});
   };
 
   const pageVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } };

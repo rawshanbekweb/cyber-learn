@@ -16,6 +16,7 @@ export default function AuthPage() {
   const [studentAge, setStudentAge] = useState("");
   const [teacherUser, setTeacherUser] = useState("");
   const [teacherPass, setTeacherPass] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Typing animation for the terminal header
   const [displayedText, setDisplayedText] = useState("");
@@ -33,39 +34,50 @@ export default function AuthPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleStudentSubmit = (e: React.FormEvent) => {
+  const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentName.trim()) return;
+    if (!studentName.trim() || isSubmitting) return;
 
-    if (studentAction === "login") {
-      const res = loginUser(studentName.trim(), "", "Student");
-      if (res.success) {
-        toast({ title: "KIRISH MUVAFFAQIYATLI", description: `Xush kelibsiz, ${studentName}!` });
+    setIsSubmitting(true);
+    try {
+      if (studentAction === "login") {
+        const res = await loginUser(studentName.trim(), "", "Student");
+        if (res.success) {
+          toast({ title: "KIRISH MUVAFFAQIYATLI", description: `Xush kelibsiz, ${studentName}!` });
+        } else {
+          toast({ variant: "destructive", title: "KIRISH XATOSI", description: res.message });
+        }
       } else {
-        toast({ variant: "destructive", title: "KIRISH XATOSI", description: res.message });
+        const ageNum = Number(studentAge);
+        if (isNaN(ageNum) || ageNum <= 0) {
+          toast({ variant: "destructive", title: "XATOLIK", description: "Yoshingizni to'g'ri kiriting!" });
+          return;
+        }
+        const res = await registerStudent(studentName.trim(), ageNum);
+        if (res.success) {
+          toast({ title: "RO'YXATDAN O'TILDI", description: "Yangi profil yaratildi. Dastlabki bilim testi tavsiya etiladi!" });
+        } else {
+          toast({ variant: "destructive", title: "XATOLIK", description: res.message });
+        }
       }
-    } else {
-      const ageNum = Number(studentAge);
-      if (isNaN(ageNum) || ageNum <= 0) {
-        toast({ variant: "destructive", title: "XATOLIK", description: "Yoshingizni to'g'ri kiriting!" });
-        return;
-      }
-      const res = registerStudent(studentName.trim(), ageNum);
-      if (res.success) {
-        toast({ title: "RO'YXATDAN O'TILDI", description: "Yangi profil yaratildi. Dastlabki bilim testi tavsiya etiladi!" });
-      } else {
-        toast({ variant: "destructive", title: "XATOLIK", description: res.message });
-      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleTeacherSubmit = (e: React.FormEvent) => {
+  const handleTeacherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = loginUser(teacherUser, teacherPass, "Teacher");
-    if (res.success) {
-      toast({ title: "ADMIN PANELI", description: "Boshqaruv paneliga muvaffaqiyatli kirildi." });
-    } else {
-      toast({ variant: "destructive", title: "AUTENTIFIKATSIYA XATOSI", description: res.message || "Kirish nomi yoki parol noto'g'ri!" });
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const res = await loginUser(teacherUser, teacherPass, "Teacher");
+      if (res.success) {
+        toast({ title: "ADMIN PANELI", description: "Boshqaruv paneliga muvaffaqiyatli kirildi." });
+      } else {
+        toast({ variant: "destructive", title: "AUTENTIFIKATSIYA XATOSI", description: res.message || "Kirish nomi yoki parol noto'g'ri!" });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -222,11 +234,14 @@ export default function AuthPage() {
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl text-white bg-primary hover:bg-primary/95 shadow-sm transition-all duration-150 mt-2"
+                    disabled={isSubmitting}
+                    className="w-full py-2.5 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl text-white bg-primary hover:bg-primary/95 shadow-sm transition-all duration-150 mt-2 disabled:opacity-60"
                   >
-                    {studentAction === "login"
-                      ? <><LogIn className="w-4 h-4" /> Tizimga Kirish</>
-                      : <><UserPlus className="w-4 h-4" /> Ro'yxatdan O'tish</>
+                    {isSubmitting
+                      ? "Yuborilmoqda..."
+                      : studentAction === "login"
+                        ? <><LogIn className="w-4 h-4" /> Tizimga Kirish</>
+                        : <><UserPlus className="w-4 h-4" /> Ro'yxatdan O'tish</>
                     }
                   </button>
                 </form>
@@ -287,9 +302,10 @@ export default function AuthPage() {
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl text-white bg-primary hover:bg-primary/95 shadow-sm transition-all duration-150 mt-2"
+                    disabled={isSubmitting}
+                    className="w-full py-2.5 flex items-center justify-center gap-2 text-xs font-semibold rounded-xl text-white bg-primary hover:bg-primary/95 shadow-sm transition-all duration-150 mt-2 disabled:opacity-60"
                   >
-                    <LogIn className="w-4 h-4" /> Admin Sifatida Kirish
+                    {isSubmitting ? "Yuborilmoqda..." : <><LogIn className="w-4 h-4" /> Admin Sifatida Kirish</>}
                   </button>
                 </form>
 

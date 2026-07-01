@@ -4,23 +4,17 @@ import { motion } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
 import { useToast } from "@/hooks/use-toast";
 import { Award, Lock, Download, Loader2, CheckCircle2 } from "lucide-react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import api from "@/lib/api";
 
 export default function Certificate() {
-  const { moduleProgress } = useAppStore();
+  const { moduleProgress, token } = useAppStore();
   const { toast } = useToast();
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   const downloadCertificate = async (id: number) => {
     setDownloadingId(id);
     try {
-      const res = await fetch(`${API_URL}/api/modules/${id}/certificate`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Sertifikatni yuklab bo'lmadi");
-      }
-      const blob = await res.blob();
+      const blob = await api.downloadFile(`/api/modules/${id}/certificate`, token);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
