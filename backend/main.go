@@ -55,6 +55,9 @@ func main() {
 		// Rankings (public leaderboard)
 		api.GET("/rankings", handlers.GetRankings)
 
+		// Certificate verification (public lookup by code)
+		api.GET("/certificate/verify/:code", handlers.VerifyCertificate)
+
 		// Auth (public)
 		auth := api.Group("/auth")
 		{
@@ -94,6 +97,9 @@ func main() {
 
 			// Analytics
 			protected.GET("/analytics", handlers.GetAnalytics)
+
+			// Certificate (generates the student's own certificate)
+			protected.GET("/certificate", handlers.GetCertificate)
 
 			// Fuzzy weights
 			protected.GET("/fuzzy-weights", handlers.GetFuzzyWeights)

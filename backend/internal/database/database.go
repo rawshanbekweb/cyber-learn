@@ -37,6 +37,7 @@ func Init() {
 		&models.Assignment{},
 		&models.AssignmentQuestion{},
 		&models.FuzzyWeights{},
+		&models.Certificate{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
