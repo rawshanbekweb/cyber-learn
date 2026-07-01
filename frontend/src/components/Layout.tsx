@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   BookOpen, Shield, Cpu, BarChart3,
   UserCheck, ShieldCheck, LogOut, User,
-  ClipboardList, BookMarked, Terminal, Activity, Trophy
+  ClipboardList, BookMarked, Terminal, Activity, Trophy, Award
 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { translateLevel } from "@/lib/utils";
@@ -24,6 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/ai-engine", icon: Cpu, label: "AI Dvigateli (ANFIS)", show: true },
     { href: "/analytics", icon: BarChart3, label: "Analitika", show: true },
     { href: "/rankings", icon: Trophy, label: "Reyting", show: true },
+    { href: "/certificate", icon: Award, label: "Sertifikat", show: userRole === "Student" && readinessScore >= 0.8 },
     { href: "/assignments", icon: ClipboardList, label: "Topshiriqlar", show: userRole === "Teacher" },
   ];
 
