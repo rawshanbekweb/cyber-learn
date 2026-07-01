@@ -158,6 +158,18 @@ func DeleteLesson(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Dars o'chirildi"})
 }
 
+// lessonReadXP scales the reward with how hard the lesson's material is.
+func lessonReadXP(d models.Difficulty) int {
+	switch d {
+	case models.DifficultyIntermediate:
+		return 20
+	case models.DifficultyAdvanced:
+		return 30
+	default:
+		return 10
+	}
+}
+
 // POST /api/lessons/:id/read — Student marks lesson as read
 func MarkLessonRead(c *gin.Context) {
 	idStr := c.Param("id")
@@ -190,7 +202,7 @@ func MarkLessonRead(c *gin.Context) {
 	}
 	database.DB.Create(&lr)
 	database.DB.Model(&models.User{}).Where("id = ?", userID).
-		Update("xp", gorm.Expr("xp + ?", 20))
+		Update("xp", gorm.Expr("xp + ?", lessonReadXP(lesson.Difficulty)))
 
 	c.JSON(http.StatusOK, gin.H{"message": "Dars o'qilgan deb belgilandi"})
 }

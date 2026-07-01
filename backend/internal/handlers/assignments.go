@@ -220,7 +220,12 @@ func CompleteAssignment(c *gin.Context) {
 	}
 
 	database.DB.Model(&assignment).Update("completed", true)
+
+	// More questions means more work, so it's worth more XP.
+	var questionCount int64
+	database.DB.Model(&models.AssignmentQuestion{}).Where("assignment_id = ?", id).Count(&questionCount)
+	xpAward := 20 + 10*int(questionCount)
 	database.DB.Model(&models.User{}).Where("id = ?", userID).
-		Update("xp", gorm.Expr("xp + ?", 50))
+		Update("xp", gorm.Expr("xp + ?", xpAward))
 	c.JSON(http.StatusOK, gin.H{"message": "Topshiriq muvaffaqiyatli bajarildi!"})
 }

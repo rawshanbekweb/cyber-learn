@@ -2,7 +2,6 @@ package database
 
 import (
 	"log"
-	"math"
 	"os"
 
 	"cyberai-backend/internal/models"
@@ -146,6 +145,14 @@ func seed() {
 		}
 
 		for _, ds := range demoStudents {
+			// Mirrors the live XP rules: a flat bonus for the diagnostic test,
+			// plus 50 * orderIndex per completed module (module IDs here match
+			// their orderIndex since both are seeded 1..4 in the same order).
+			xp := 30
+			for _, cid := range ds.completedMods {
+				xp += 50 * cid
+			}
+
 			student := models.User{
 				Name:                    ds.name,
 				Age:                     ds.age,
@@ -160,7 +167,7 @@ func seed() {
 				LastFuzzyScore:          ds.fuzzyScore,
 				LastFuzzyLevel:          ds.level,
 				HasFuzzyResult:          true,
-				XP:                      len(ds.completedMods)*100 + int(math.Round(ds.fuzzyScore*100)),
+				XP:                      xp,
 			}
 			DB.Create(&student)
 

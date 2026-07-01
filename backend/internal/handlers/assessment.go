@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"math"
 	"net/http"
 
 	"cyberai-backend/internal/database"
@@ -63,10 +62,12 @@ func SubmitAssessment(c *gin.Context) {
 		"last_fuzzy_rule3":          result.Rule3,
 		"has_fuzzy_result":          true,
 	}
-	// Diagnostic test XP bonus is only awarded once — retaking the test
-	// (e.g. after a teacher adjusts fuzzy weights) must not re-add it.
+	// Diagnostic test gives a flat completion bonus, not a score-based one —
+	// otherwise a weaker result would earn less XP for the same effort.
+	// Only awarded once: retaking the test must not re-add it.
+	const diagnosticTestXP = 30
 	if !user.HasCompletedInitialTest {
-		updates["xp"] = gorm.Expr("xp + ?", int(math.Round(result.Score*100)))
+		updates["xp"] = gorm.Expr("xp + ?", diagnosticTestXP)
 	}
 	database.DB.Model(&models.User{}).Where("id = ?", userID).Updates(updates)
 

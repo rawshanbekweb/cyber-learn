@@ -126,6 +126,9 @@ func CompleteModule(c *gin.Context) {
 		return
 	}
 
+	var currentMod models.Module
+	database.DB.First(&currentMod, moduleID)
+
 	// Mark as completed
 	database.DB.Model(&mp).Update("completed", true)
 
@@ -134,16 +137,16 @@ func CompleteModule(c *gin.Context) {
 	database.DB.Model(&models.ModuleProgress{}).
 		Where("user_id = ? AND completed = ?", userID, true).
 		Count(&completedCount)
+	// Later modules are harder, so they're worth more XP.
+	xpAward := 50 * currentMod.OrderIndex
 	database.DB.Model(&models.User{}).Where("id = ?", userID).
 		Updates(map[string]interface{}{
 			"completed_modules_count": completedCount,
-			"xp":                      gorm.Expr("xp + ?", 100),
+			"xp":                      gorm.Expr("xp + ?", xpAward),
 		})
 
 	// Unlock next module if exists
 	var nextModule models.Module
-	var currentMod models.Module
-	database.DB.First(&currentMod, moduleID)
 	if err := database.DB.Where("order_index = ?", currentMod.OrderIndex+1).First(&nextModule).Error; err == nil {
 		var nextMP models.ModuleProgress
 		if database.DB.Where("user_id = ? AND module_id = ?", userID, nextModule.ID).First(&nextMP).Error == nil {
