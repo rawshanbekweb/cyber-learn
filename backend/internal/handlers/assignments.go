@@ -202,6 +202,7 @@ func CompleteAssignment(c *gin.Context) {
 	}
 
 	userID, _ := c.Get("userID")
+	role, _ := c.Get("userRole")
 
 	var assignment models.Assignment
 	if err := database.DB.First(&assignment, id).Error; err != nil {
@@ -209,7 +210,9 @@ func CompleteAssignment(c *gin.Context) {
 		return
 	}
 
-	if assignment.StudentID != userID.(uint) {
+	// A student may only complete their own assignment; a teacher may mark
+	// any assignment complete (e.g. after reviewing offline work).
+	if role != "Teacher" && assignment.StudentID != userID.(uint) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Bu topshiriq sizga tegishli emas"})
 		return
 	}

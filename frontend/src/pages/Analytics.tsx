@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { translateLevel } from "@/lib/utils";
 import { GraduationCap, BookOpen, AlertCircle, Plus, User, Activity, BarChart3, TrendingUp } from "lucide-react";
@@ -15,18 +16,31 @@ function AnalyticsCard({ children, className = "" }: { children: React.ReactNode
 }
 
 export default function Analytics() {
-  const { userRole, students, assignments, addAssignment, completeAssignment, currentUser, readinessScore, fuzzyMetrics } = useAppStore();
+  const { userRole, students, assignments, addAssignment, completeAssignment, currentUser, readinessScore, fuzzyMetrics, fetchStudents, fetchAssignments } = useAppStore();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const triggerRemediation = (studentId: number, studentName: string) => {
-    addAssignment("Fuzzy Qayta o'rganish: Asoslarni mustahkamlash", studentId, 1);
-    toast({ title: "REMEDIATION YUBORILDI", description: `${studentName} uchun asosiy tushunchalar moduli biriktirildi.` });
+  useEffect(() => {
+    if (userRole === "Teacher") fetchStudents();
+    fetchAssignments();
+  }, [userRole]);
+
+  const triggerRemediation = async (studentId: number, studentName: string) => {
+    const res = await addAssignment("Fuzzy Qayta o'rganish: Asoslarni mustahkamlash", studentId, 1);
+    if (res.success) {
+      toast({ title: "REMEDIATION YUBORILDI", description: `${studentName} uchun asosiy tushunchalar moduli biriktirildi.` });
+    } else {
+      toast({ variant: "destructive", title: "Xatolik", description: res.message });
+    }
   };
 
-  const triggerFastForward = (studentId: number, studentName: string) => {
-    addAssignment("Fuzzy O'tish: Murakkab himoya tizimlari", studentId, 4);
-    toast({ title: "O'TISH QARORI", description: `${studentName} muvaffaqiyatli o'tgani uchun murakkab modulga yo'naltirildi.` });
+  const triggerFastForward = async (studentId: number, studentName: string) => {
+    const res = await addAssignment("Fuzzy O'tish: Murakkab himoya tizimlari", studentId, 4);
+    if (res.success) {
+      toast({ title: "O'TISH QARORI", description: `${studentName} muvaffaqiyatli o'tgani uchun murakkab modulga yo'naltirildi.` });
+    } else {
+      toast({ variant: "destructive", title: "Xatolik", description: res.message });
+    }
   };
 
   const studentAssignments = assignments.filter(a => a.studentId === currentUser?.id);
@@ -330,9 +344,13 @@ export default function Analytics() {
                       </div>
                       {!as.completed && (
                         <button
-                          onClick={() => {
-                            completeAssignment(as.id);
-                            toast({ title: "TOPSHIRIQ BAJARILDI", description: "Tabriklaymiz! Topshiriq muvaffaqiyatli yakunlandi." });
+                          onClick={async () => {
+                            const res = await completeAssignment(as.id);
+                            if (res.success) {
+                              toast({ title: "TOPSHIRIQ BAJARILDI", description: "Tabriklaymiz! Topshiriq muvaffaqiyatli yakunlandi." });
+                            } else {
+                              toast({ variant: "destructive", title: "Xatolik", description: res.message });
+                            }
                           }}
                           className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-primary hover:bg-primary/95 rounded-xl shadow-sm transition-all duration-150"
                         >

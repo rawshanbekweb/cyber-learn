@@ -40,6 +40,42 @@ interface BackendModuleProgress {
   completed: boolean;
 }
 
+interface BackendStudent {
+  id: number;
+  name: string;
+  age: number;
+  diagnosticScore: number;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  fuzzyScore: number;
+  completedModulesCount: number;
+  speed: number;
+  errors: number;
+  hasCompletedInitialTest: boolean;
+  hasFuzzyResult: boolean;
+  lastFuzzyResult: BackendFuzzyResult | null;
+  moduleProgress: BackendModuleProgress[] | null;
+}
+
+interface BackendAssignmentQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+interface BackendAssignment {
+  id: number;
+  title: string;
+  description: string;
+  studentId: number;
+  studentName: string;
+  targetModuleId: number;
+  assignmentType: "Nazariy" | "Amaliy";
+  completed: boolean;
+  dateAssigned: string;
+  questions: BackendAssignmentQuestion[] | null;
+}
+
 export interface FuzzyMetrics {
   knowledge: number;
   errors: number;
@@ -134,8 +170,10 @@ export interface AppState {
   submitAssessment: (metrics: FuzzyMetrics) => void;
   completeModule: (moduleId: number) => void;
   updateFuzzyWeights: (weights: Partial<FuzzyWeights>) => void;
-  addAssignment: (title: string, studentId: number, targetModuleId: number, questions?: AssignmentQuestion[], description?: string, assignmentType?: "Nazariy" | "Amaliy") => void;
-  completeAssignment: (assignmentId: number) => void;
+  fetchStudents: () => Promise<void>;
+  fetchAssignments: () => Promise<void>;
+  addAssignment: (title: string, studentId: number, targetModuleId: number, questions?: AssignmentQuestion[], description?: string, assignmentType?: "Nazariy" | "Amaliy") => Promise<{ success: boolean; message?: string }>;
+  completeAssignment: (assignmentId: number) => Promise<{ success: boolean; message?: string }>;
   addLesson: (lesson: Omit<Lesson, 'id' | 'createdAt' | 'readByStudents'>) => void;
   deleteLesson: (lessonId: number) => void;
   markLessonRead: (lessonId: number) => void;
@@ -240,6 +278,43 @@ function upsertStudent(students: Student[], student: Student): Student[] {
   const copy = students.slice();
   copy[idx] = student;
   return copy;
+}
+
+function backendStudentToStudent(s: BackendStudent): Student {
+  return {
+    id: s.id,
+    name: s.name,
+    age: s.age,
+    diagnosticScore: s.diagnosticScore,
+    level: s.level,
+    fuzzyScore: s.fuzzyScore,
+    completedModulesCount: s.completedModulesCount,
+    speed: s.speed,
+    errors: s.errors,
+    hasCompletedInitialTest: s.hasCompletedInitialTest,
+    moduleProgress: s.moduleProgress ?? [],
+    lastFuzzyResult: s.hasFuzzyResult && s.lastFuzzyResult ? s.lastFuzzyResult : null,
+  };
+}
+
+function backendAssignmentToAssignment(a: BackendAssignment): Assignment {
+  return {
+    id: a.id,
+    title: a.title,
+    studentId: a.studentId,
+    studentName: a.studentName,
+    targetModuleId: a.targetModuleId,
+    completed: a.completed,
+    dateAssigned: a.dateAssigned.slice(0, 10),
+    questions: (a.questions ?? []).map(q => ({
+      id: q.id,
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correctAnswer,
+    })),
+    description: a.description,
+    assignmentType: a.assignmentType,
+  };
 }
 
 const initialState = {
@@ -450,57 +525,61 @@ export const useAppStore = create<AppState>()(
         };
       }),
 
-      addAssignment: (title, studentId, targetModuleId, questions = [], description = "", assignmentType = "Nazariy") => set((state) => {
-        const student = state.students.find(s => s.id === studentId);
-        if (!student) return {};
+      fetchStudents: async () => {
+        const { token } = get();
+        try {
+          const data = await api.get<BackendStudent[]>("/api/students", token);
+          set({ students: data.map(backendStudentToStudent) });
+        } catch { /* keep existing local list if this fails */ }
+      },
 
-        const newAssignment: Assignment = {
-          id: Date.now(),
-          title,
-          studentId,
-          studentName: student.name,
-          targetModuleId,
-          completed: false,
-          dateAssigned: new Date().toISOString().split('T')[0],
-          questions,
-          description,
-          assignmentType,
-        };
+      fetchAssignments: async () => {
+        const { token } = get();
+        try {
+          const data = await api.get<BackendAssignment[]>("/api/assignments", token);
+          set({ assignments: data.map(backendAssignmentToAssignment) });
+        } catch { /* keep existing local list if this fails */ }
+      },
 
-        // If assigning to current student, unlock the module immediately for them
-        let extraState = {};
-        if (studentId === state.currentUser?.id) {
-          const newModules = state.moduleProgress.map(m => 
-            m.id === targetModuleId ? { ...m, unlocked: true } : m
-          );
-          extraState = { moduleProgress: newModules };
+      addAssignment: async (title, studentId, targetModuleId, questions = [], description = "", assignmentType = "Nazariy") => {
+        const { token } = get();
+        try {
+          const created = await api.post<BackendAssignment>("/api/assignments", {
+            title,
+            description,
+            studentId,
+            targetModuleId,
+            assignmentType,
+            questions: questions.map(q => ({
+              question: q.question,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+            })),
+          }, token);
+
+          set((state) => ({
+            assignments: [backendAssignmentToAssignment(created), ...state.assignments],
+          }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Topshiriq yaratishda xatolik" };
         }
+      },
 
-        // Also unlock the module inside that student's object inside students array
-        const updatedStudents = state.students.map(s => {
-          if (s.id === studentId) {
-            return {
-              ...s,
-              moduleProgress: s.moduleProgress.map(m => 
-                m.id === targetModuleId ? { ...m, unlocked: true } : m
-              )
-            };
-          }
-          return s;
-        });
-
-        return {
-          assignments: [newAssignment, ...state.assignments],
-          students: updatedStudents,
-          ...extraState
-        };
-      }),
-
-      completeAssignment: (assignmentId) => set((state) => ({
-        assignments: state.assignments.map(a => 
-          a.id === assignmentId ? { ...a, completed: true } : a
-        )
-      })),
+      completeAssignment: async (assignmentId) => {
+        const { token } = get();
+        try {
+          await api.post(`/api/assignments/${assignmentId}/complete`, {}, token);
+          set((state) => ({
+            assignments: state.assignments.map(a =>
+              a.id === assignmentId ? { ...a, completed: true } : a
+            ),
+          }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "Xatolik yuz berdi" };
+        }
+      },
 
       addLesson: (lessonData) => set((state) => ({
         lessons: [

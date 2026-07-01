@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
 import type { AssignmentQuestion } from "@/store/useAppStore";
@@ -13,8 +13,14 @@ import {
 } from "lucide-react";
 
 export default function Assignments() {
-  const { students, assignments, moduleProgress, addAssignment, completeAssignment, userRole } = useAppStore();
+  const { students, assignments, moduleProgress, addAssignment, completeAssignment, userRole, fetchStudents, fetchAssignments } = useAppStore();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (userRole !== "Teacher") return;
+    fetchStudents();
+    fetchAssignments();
+  }, [userRole]);
 
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
@@ -54,10 +60,14 @@ export default function Assignments() {
     setQuestions(prev => prev.filter(q => q.id !== id));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskTitle.trim()) return;
-    addAssignment(taskTitle, selectedStudent, selectedModule, questions, taskDescription, assignmentType);
+    const res = await addAssignment(taskTitle, selectedStudent, selectedModule, questions, taskDescription, assignmentType);
+    if (!res.success) {
+      toast({ variant: "destructive", title: "❌ Topshiriq yuborilmadi", description: res.message });
+      return;
+    }
     toast({
       title: "✅ Topshiriq yuborildi!",
       description: `O'quvchiga ${questions.length > 0 ? questions.length + " ta savol bilan " : ""}${assignmentType} topshiriq muvaffaqiyatli biriktirildi.`,
@@ -420,9 +430,13 @@ export default function Assignments() {
                       assignment={as}
                       expanded={expandedAssignment === as.id}
                       onToggle={() => setExpandedAssignment(expandedAssignment === as.id ? null : as.id)}
-                      onComplete={() => {
-                        completeAssignment(as.id);
-                        toast({ title: "Topshiriq bajarildi ✓", description: `"${as.title}" yakunlandi.` });
+                      onComplete={async () => {
+                        const res = await completeAssignment(as.id);
+                        if (res.success) {
+                          toast({ title: "Topshiriq bajarildi ✓", description: `"${as.title}" yakunlandi.` });
+                        } else {
+                          toast({ variant: "destructive", title: "Xatolik", description: res.message });
+                        }
                       }}
                     />
                 ))
