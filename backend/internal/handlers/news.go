@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,6 +18,33 @@ type NewsArticle struct {
 	ImageURL    string `json:"imageUrl"`
 	Source      string `json:"source"`
 	PublishedAt string `json:"publishedAt"`
+	Category    string `json:"category"`
+}
+
+// categoryKeywords is checked in order, so more specific threats (ransomware,
+// phishing, ...) win over the generic "Hacking" bucket when a title matches
+// several — e.g. "Ransomware Gang Hacks..." should tag as Ransomware.
+var categoryKeywords = []struct {
+	label    string
+	keywords []string
+}{
+	{"Ransomware", []string{"ransomware"}},
+	{"Data Breach", []string{"data breach", "breach", "leaked", "leak"}},
+	{"Phishing", []string{"phishing"}},
+	{"Malware", []string{"malware", "trojan", "spyware", "virus"}},
+	{"Hacking", []string{"hack", "hacker", "hacked", "exploit", "vulnerability", "cve-"}},
+}
+
+func categorize(title string) string {
+	lower := strings.ToLower(title)
+	for _, c := range categoryKeywords {
+		for _, kw := range c.keywords {
+			if strings.Contains(lower, kw) {
+				return c.label
+			}
+		}
+	}
+	return "Umumiy"
 }
 
 type newsAPIResponse struct {
@@ -74,7 +102,7 @@ func GetNews(c *gin.Context) {
 	q.Set("qInTitle", `cybersecurity OR "cyber security" OR hacking OR hacker OR "data breach" OR ransomware OR malware OR phishing`)
 	q.Set("language", "en")
 	q.Set("sortBy", "publishedAt")
-	q.Set("pageSize", "24")
+	q.Set("pageSize", "40")
 	req.URL.RawQuery = q.Encode()
 	req.Header.Set("X-Api-Key", apiKey)
 
@@ -108,6 +136,7 @@ func GetNews(c *gin.Context) {
 			ImageURL:    a.URLToImage,
 			Source:      a.Source.Name,
 			PublishedAt: a.PublishedAt,
+			Category:    categorize(a.Title),
 		})
 	}
 
