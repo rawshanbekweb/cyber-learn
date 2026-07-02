@@ -63,6 +63,9 @@ func main() {
 		// Certificate verification (public lookup by code)
 		api.GET("/certificate/verify/:code", handlers.VerifyCertificate)
 
+		// Cybersecurity news feed (public, proxied through backend)
+		api.GET("/news", handlers.GetNews)
+
 		// Auth (public)
 		auth := api.Group("/auth")
 		{

@@ -20,6 +20,7 @@ import AuthPage from "@/pages/AuthPage";
 import Assignments from "@/pages/Assignments";
 import Lessons from "@/pages/Lessons";
 import Rankings from "@/pages/Rankings";
+import News from "@/pages/News";
 import { AIAssistant } from "@/components/AIAssistant";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/assignments" component={Assignments} />
         <Route path="/lessons" component={Lessons} />
         <Route path="/rankings" component={Rankings} />
+        <Route path="/news" component={News} />
         <Route component={NotFound} />
       </Switch>
     </AnimatePresence>
