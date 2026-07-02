@@ -17,12 +17,73 @@ import (
 type CTFChallengeResponse struct {
 	ID          uint                 `json:"id"`
 	ModuleID    uint                 `json:"moduleId"`
+	ModuleTitle string               `json:"moduleTitle,omitempty"`
 	Title       string               `json:"title"`
 	Description string               `json:"description"`
 	Difficulty  models.CTFDifficulty `json:"difficulty"`
 	Points      int                  `json:"points"`
 	Hint        string               `json:"hint"`
 	Solved      bool                 `json:"solved"`
+}
+
+// GET /api/ctf — all CTF challenges the current user can see, across every
+// module. Students only see challenges from modules they've unlocked;
+// teachers see everything.
+func GetAllCTFChallenges(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	role, _ := c.Get("userRole")
+
+	query := database.DB.Order("module_id asc, id asc")
+
+	if role == "Student" {
+		var progresses []models.ModuleProgress
+		database.DB.Where("user_id = ? AND unlocked = ?", userID, true).Find(&progresses)
+		if len(progresses) == 0 {
+			c.JSON(http.StatusOK, []CTFChallengeResponse{})
+			return
+		}
+		unlockedModuleIDs := make([]uint, 0, len(progresses))
+		for _, p := range progresses {
+			unlockedModuleIDs = append(unlockedModuleIDs, p.ModuleID)
+		}
+		query = query.Where("module_id IN ?", unlockedModuleIDs)
+	}
+
+	var challenges []models.CTFChallenge
+	query.Find(&challenges)
+
+	var modules []models.Module
+	database.DB.Find(&modules)
+	moduleTitles := make(map[uint]string, len(modules))
+	for _, m := range modules {
+		moduleTitles[m.ID] = m.Title
+	}
+
+	solvedIDs := map[uint]bool{}
+	if role == "Student" {
+		var solves []models.CTFSolve
+		database.DB.Where("user_id = ?", userID).Find(&solves)
+		for _, s := range solves {
+			solvedIDs[s.ChallengeID] = true
+		}
+	}
+
+	result := make([]CTFChallengeResponse, 0, len(challenges))
+	for _, ch := range challenges {
+		result = append(result, CTFChallengeResponse{
+			ID:          ch.ID,
+			ModuleID:    ch.ModuleID,
+			ModuleTitle: moduleTitles[ch.ModuleID],
+			Title:       ch.Title,
+			Description: ch.Description,
+			Difficulty:  ch.Difficulty,
+			Points:      ch.Points,
+			Hint:        ch.Hint,
+			Solved:      solvedIDs[ch.ID],
+		})
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 // GET /api/modules/:id/ctf — CTF challenges for a module; flags are never sent to the client

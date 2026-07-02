@@ -21,6 +21,7 @@ import Assignments from "@/pages/Assignments";
 import Lessons from "@/pages/Lessons";
 import Rankings from "@/pages/Rankings";
 import News from "@/pages/News";
+import CTF from "@/pages/CTF";
 import { AIAssistant } from "@/components/AIAssistant";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -41,6 +42,7 @@ function Router() {
         <Route path="/lessons" component={Lessons} />
         <Route path="/rankings" component={Rankings} />
         <Route path="/news" component={News} />
+        <Route path="/ctf" component={CTF} />
         <Route component={NotFound} />
       </Switch>
     </AnimatePresence>
