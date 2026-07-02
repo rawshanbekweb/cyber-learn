@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { runFuzzyEngine } from '../lib/fuzzyEngine';
 import type { FuzzyResult, FuzzyWeights } from '../lib/fuzzyEngine';
-import api from '../lib/api';
+import api, { AUTH_EXPIRED_EVENT } from '../lib/api';
+import { toast } from '../hooks/use-toast';
 
 interface BackendFuzzyResult {
   score: number;
@@ -702,3 +703,16 @@ export const useAppStore = create<AppState>()(
     }
   )
 );
+
+if (typeof window !== 'undefined') {
+  window.addEventListener(AUTH_EXPIRED_EVENT, () => {
+    if (useAppStore.getState().currentUser) {
+      useAppStore.getState().logoutUser();
+      toast({
+        title: 'Sessiya muddati tugadi',
+        description: 'Iltimos, tizimga qaytadan kiring.',
+        variant: 'destructive',
+      });
+    }
+  });
+}

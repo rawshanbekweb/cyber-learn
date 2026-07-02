@@ -19,7 +19,7 @@ type Claims struct {
 func getJWTSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "cyberai-secret-key-change-in-production"
+		secret = "cyberai-super-secret-key-change-in-production"
 	}
 	return []byte(secret)
 }

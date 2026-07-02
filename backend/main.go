@@ -10,9 +10,15 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env if present; real environment variables always take priority.
+	if err := godotenv.Load(); err != nil {
+		log.Println("ℹ️  .env fayli topilmadi, muhit o'zgaruvchilari ishlatiladi")
+	}
+
 	// Initialize database
 	database.Init()
 

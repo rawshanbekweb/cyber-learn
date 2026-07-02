@@ -1,7 +1,7 @@
 BINARY=cyberai-server
 PORT?=8080
 DB_PATH?=cyberai.db
-JWT_SECRET?=cyberai-dev-secret
+JWT_SECRET?=cyberai-super-secret-key-change-in-production
 
 .PHONY: all deps build run clean dev
 
