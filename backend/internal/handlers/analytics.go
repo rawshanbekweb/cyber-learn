@@ -32,17 +32,16 @@ type TeacherAnalytics struct {
 }
 
 type StudentAnalytics struct {
-	FuzzyScore      float64            `json:"fuzzyScore"`
-	DiagnosticScore float64            `json:"diagnosticScore"`
-	Level           models.Level       `json:"level"`
-	Speed           float64            `json:"speed"`
-	Errors          float64            `json:"errors"`
-	LastFuzzyResult *FuzzyResultPublic `json:"lastFuzzyResult"`
+	FuzzyScore      float64                  `json:"fuzzyScore"`
+	DiagnosticScore float64                  `json:"diagnosticScore"`
+	Level           models.Level             `json:"level"`
+	Speed           float64                  `json:"speed"`
+	Errors          float64                  `json:"errors"`
+	LastFuzzyResult *FuzzyResultPublic       `json:"lastFuzzyResult"`
 	ModuleProgress  []ModuleProgressResponse `json:"moduleProgress"`
-	MyAssignments   []AssignmentResponse `json:"myAssignments"`
+	MyAssignments   []AssignmentResponse     `json:"myAssignments"`
 }
 
-// GET /api/analytics
 func GetAnalytics(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	role, _ := c.Get("userRole")
