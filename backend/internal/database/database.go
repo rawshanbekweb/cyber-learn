@@ -3,11 +3,13 @@ package database
 import (
 	"log"
 	"os"
+	"strings"
 
 	"cyberai-backend/internal/models"
 
 	"github.com/glebarez/sqlite"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -20,8 +22,15 @@ func Init() {
 		dbPath = "cyberai.db"
 	}
 
+	var dialector gorm.Dialector
+	if strings.HasPrefix(dbPath, "postgres://") || strings.HasPrefix(dbPath, "postgresql://") {
+		dialector = postgres.Open(dbPath)
+	} else {
+		dialector = sqlite.Open(dbPath)
+	}
+
 	var err error
-	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+	DB, err = gorm.Open(dialector, &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {
