@@ -59,6 +59,11 @@ function TeacherView() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"Barchasi" | "Nazariy" | "Amaliy">("Barchasi");
+
+  const tabLessons = activeTab === "Barchasi"
+    ? lessons
+    : lessons.filter(l => (l.lessonType ?? "Nazariy") === activeTab);
 
   const uploadFile = (file: File): Promise<{ url: string; name: string; size: number }> => {
     return new Promise((resolve, reject) => {
@@ -173,12 +178,44 @@ function TeacherView() {
         </button>
       </div>
 
+      {/* Barchasi / Nazariy / Amaliy Tabs */}
+      <div className="flex rounded-2xl border border-zinc-200 bg-zinc-50 p-1 gap-1">
+        {(["Barchasi", "Nazariy", "Amaliy"] as const).map(tab => {
+          const isActive = activeTab === tab;
+          const Icon = tab === "Barchasi" ? Layers : tab === "Nazariy" ? BookText : FlaskConical;
+          const tabCount = tab === "Barchasi" ? lessons.length : lessons.filter(l => (l.lessonType ?? "Nazariy") === tab).length;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                isActive
+                  ? tab === "Nazariy"
+                    ? "bg-white border border-primary/20 text-primary shadow-sm"
+                    : tab === "Amaliy"
+                      ? "bg-white border border-emerald-200 text-emerald-700 shadow-sm"
+                      : "bg-white border border-zinc-300 text-zinc-800 shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab}
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                isActive
+                  ? tab === "Nazariy" ? "bg-primary/10 text-primary" : tab === "Amaliy" ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-700"
+                  : "bg-zinc-200 text-zinc-500"
+              }`}>{tabCount}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { icon: BookOpen, label: "Jami Darslar", value: lessons.length, color: 'hsl(var(--primary))' },
-          { icon: Layers, label: "Kategoriyalar", value: new Set(lessons.map(l => l.category)).size, color: 'hsl(250 84% 54%)' },
-          { icon: PlayCircle, label: "Video Darslar", value: lessons.filter(l => l.videoUrl).length, color: 'hsl(270 80% 50%)' },
+          { icon: BookOpen, label: "Jami Darslar", value: tabLessons.length, color: 'hsl(var(--primary))' },
+          { icon: Layers, label: "Kategoriyalar", value: new Set(tabLessons.map(l => l.category)).size, color: 'hsl(250 84% 54%)' },
+          { icon: PlayCircle, label: "Video Darslar", value: tabLessons.filter(l => l.videoUrl).length, color: 'hsl(270 80% 50%)' },
         ].map(({ icon: Icon, label, value, color }) => (
           <div
             key={label}
@@ -448,20 +485,22 @@ function TeacherView() {
       {/* Lessons List */}
       <div className="space-y-3">
         <h2 className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-          Yaratilgan darslar ({lessons.length} ta)
+          Yaratilgan darslar ({tabLessons.length} ta)
         </h2>
 
-        {lessons.length === 0 ? (
+        {tabLessons.length === 0 ? (
           <div className="rounded-2xl border border-zinc-200 bg-white p-12 flex flex-col items-center gap-3 shadow-2xs">
-            <BookOpen className="w-10 h-10 text-zinc-300" />
+            {activeTab === "Barchasi" ? <BookOpen className="w-10 h-10 text-zinc-300" /> : activeTab === "Nazariy" ? <BookText className="w-10 h-10 text-zinc-300" /> : <FlaskConical className="w-10 h-10 text-zinc-300" />}
             <p className="text-sm text-center text-zinc-500 font-medium">
-              Hali hech qanday dars yaratilmagan.<br />
-              <span className="text-xs">"Yangi Dars" tugmasini bosib boshlang.</span>
+              {activeTab === "Barchasi"
+                ? <>Hali hech qanday dars yaratilmagan.<br /><span className="text-xs">"Yangi Dars" tugmasini bosib boshlang.</span></>
+                : <>Hali hech qanday {activeTab.toLowerCase()} dars yaratilmagan.<br /><span className="text-xs">"Yangi Dars" tugmasini bosib boshlang.</span></>
+              }
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {lessons.map(lesson => {
+            {tabLessons.map(lesson => {
               const Icon = categoryIcons[lesson.category] || Globe;
               const isExpanded = expandedLesson === lesson.id;
               return (
