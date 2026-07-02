@@ -89,6 +89,10 @@ func main() {
 			protected.POST("/modules/:id/complete", handlers.CompleteModule)
 			protected.GET("/modules/:id/certificate", handlers.GetModuleCertificate)
 
+			// CTF challenges (per-module)
+			protected.GET("/modules/:id/ctf", handlers.GetModuleCTFChallenges)
+			protected.POST("/ctf/:id/submit", handlers.SubmitCTFFlag)
+
 			// Assessment (fuzzy)
 			protected.POST("/assessment/submit", handlers.SubmitAssessment)
 

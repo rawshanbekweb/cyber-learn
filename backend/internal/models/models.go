@@ -165,3 +165,32 @@ type Certificate struct {
 	Score            float64   `json:"score"`
 	IssuedAt         time.Time `json:"issuedAt"`
 }
+
+type CTFDifficulty string
+
+const (
+	CTFDifficultyEasy   CTFDifficulty = "Oson"
+	CTFDifficultyMedium CTFDifficulty = "O'rta"
+	CTFDifficultyHard   CTFDifficulty = "Qiyin"
+)
+
+// CTFChallenge is a per-module flag-capture challenge. FlagHash is a bcrypt
+// hash of the (lowercased, trimmed) correct flag — never exposed to clients.
+type CTFChallenge struct {
+	gorm.Model
+	ModuleID    uint          `gorm:"not null;index" json:"moduleId"`
+	Title       string        `gorm:"not null" json:"title"`
+	Description string        `json:"description"`
+	Difficulty  CTFDifficulty `gorm:"default:'Oson'" json:"difficulty"`
+	Points      int           `gorm:"default:50" json:"points"`
+	Hint        string        `json:"hint"`
+	FlagHash    string        `json:"-"`
+}
+
+// CTFSolve records that a student solved a given challenge
+type CTFSolve struct {
+	gorm.Model
+	UserID      uint      `gorm:"uniqueIndex:idx_user_challenge;not null" json:"userId"`
+	ChallengeID uint      `gorm:"uniqueIndex:idx_user_challenge;not null" json:"challengeId"`
+	SolvedAt    time.Time `json:"solvedAt"`
+}
