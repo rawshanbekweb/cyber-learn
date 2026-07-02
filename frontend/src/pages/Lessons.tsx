@@ -198,21 +198,37 @@ function TeacherView() {
         ))}
       </div>
 
-      {/* Create Form */}
+      {/* Create Form Modal */}
       <AnimatePresence>
         {showForm && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden rounded-2xl bg-white border border-zinc-200 shadow-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/40 backdrop-blur-sm"
+            onClick={() => setShowForm(false)}
           >
-            <div className="px-6 py-4 flex items-center gap-2 border-b border-zinc-100">
-              <BookMarked className="w-4 h-4 text-primary" />
-              <span className="text-xs font-bold tracking-wider uppercase text-zinc-800">
-                Yangi Dars Yaratish
-              </span>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white border border-zinc-200 shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+            <div className="sticky top-0 px-6 py-4 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-zinc-100 z-10">
+              <div className="flex items-center gap-2">
+                <BookMarked className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold tracking-wider uppercase text-zinc-800">
+                  Yangi Dars Yaratish
+                </span>
+              </div>
+              <button
+                onClick={() => setShowForm(false)}
+                className="p-1.5 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <div className="p-6">
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -424,6 +440,7 @@ function TeacherView() {
                 </button>
               </form>
             </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -720,12 +737,14 @@ function TeacherView() {
 function StudentView() {
   const { lessons, markLessonRead } = useAppStore();
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-  const [activeTab, setActiveTab] = useState<"Nazariy" | "Amaliy">("Nazariy");
+  const [activeTab, setActiveTab] = useState<"Barchasi" | "Nazariy" | "Amaliy">("Barchasi");
   const [filterCategory, setFilterCategory] = useState("Barchasi");
   const [filterDifficulty, setFilterDifficulty] = useState("Barchasi");
   const { toast } = useToast();
 
-  const tabLessons = lessons.filter(l => (l.lessonType ?? "Nazariy") === activeTab);
+  const tabLessons = activeTab === "Barchasi"
+    ? lessons
+    : lessons.filter(l => (l.lessonType ?? "Nazariy") === activeTab);
   const categories = ["Barchasi", ...Array.from(new Set(tabLessons.map(l => l.category)))];
   const difficulties = ["Barchasi", "Boshlang'ich", "O'rta", "Yuqori"];
 
@@ -761,12 +780,12 @@ function StudentView() {
         </p>
       </div>
 
-      {/* Nazariy / Amaliy Tabs */}
+      {/* Barchasi / Nazariy / Amaliy Tabs */}
       <div className="flex rounded-2xl border border-zinc-200 bg-zinc-50 p-1 gap-1">
-        {(["Nazariy", "Amaliy"] as const).map(tab => {
+        {(["Barchasi", "Nazariy", "Amaliy"] as const).map(tab => {
           const isActive = activeTab === tab;
-          const Icon = tab === "Nazariy" ? BookText : FlaskConical;
-          const tabCount = lessons.filter(l => (l.lessonType ?? "Nazariy") === tab).length;
+          const Icon = tab === "Barchasi" ? Layers : tab === "Nazariy" ? BookText : FlaskConical;
+          const tabCount = tab === "Barchasi" ? lessons.length : lessons.filter(l => (l.lessonType ?? "Nazariy") === tab).length;
           return (
             <button
               key={tab}
@@ -775,7 +794,9 @@ function StudentView() {
                 isActive
                   ? tab === "Nazariy"
                     ? "bg-white border border-primary/20 text-primary shadow-sm"
-                    : "bg-white border border-emerald-200 text-emerald-700 shadow-sm"
+                    : tab === "Amaliy"
+                      ? "bg-white border border-emerald-200 text-emerald-700 shadow-sm"
+                      : "bg-white border border-zinc-300 text-zinc-800 shadow-sm"
                   : "text-zinc-400 hover:text-zinc-600"
               }`}
             >
@@ -783,7 +804,7 @@ function StudentView() {
               {tab}
               <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
                 isActive
-                  ? tab === "Nazariy" ? "bg-primary/10 text-primary" : "bg-emerald-100 text-emerald-700"
+                  ? tab === "Nazariy" ? "bg-primary/10 text-primary" : tab === "Amaliy" ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-zinc-700"
                   : "bg-zinc-200 text-zinc-500"
               }`}>{tabCount}</span>
             </button>
@@ -871,10 +892,10 @@ function StudentView() {
       {/* Lesson Cards */}
       {tabLessons.length === 0 ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-12 flex flex-col items-center gap-3 shadow-2xs">
-          {activeTab === "Nazariy" ? <BookText className="w-10 h-10 text-zinc-300" /> : <FlaskConical className="w-10 h-10 text-zinc-300" />}
+          {activeTab === "Barchasi" ? <BookOpen className="w-10 h-10 text-zinc-300" /> : activeTab === "Nazariy" ? <BookText className="w-10 h-10 text-zinc-300" /> : <FlaskConical className="w-10 h-10 text-zinc-300" />}
           <p className="text-sm text-center text-zinc-500 font-medium">
-            Hali hech qanday {activeTab.toLowerCase()} dars qo'shilmagan.<br />
-            <span className="text-xs">O'qituvchi {activeTab.toLowerCase()} dars qo'shganda bu yerda ko'rinadi.</span>
+            Hali hech qanday {activeTab === "Barchasi" ? "" : activeTab.toLowerCase() + " "}dars qo'shilmagan.<br />
+            <span className="text-xs">O'qituvchi {activeTab === "Barchasi" ? "" : activeTab.toLowerCase() + " "}dars qo'shganda bu yerda ko'rinadi.</span>
           </p>
         </div>
       ) : filtered.length === 0 ? (
