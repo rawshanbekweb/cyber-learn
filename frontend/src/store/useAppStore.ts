@@ -184,6 +184,7 @@ export interface AppState {
   loginUser: (name: string, parol: string, role: "Student" | "Teacher") => Promise<{ success: boolean; message?: string }>;
   registerStudent: (name: string, age: number) => Promise<{ success: boolean; message?: string }>;
   logoutUser: () => void;
+  verifySession: () => Promise<void>;
   setRole: (role: "Student" | "Teacher") => void;
   submitAssessment: (metrics: FuzzyMetrics) => void;
   completeModule: (moduleId: number) => void;
@@ -444,6 +445,17 @@ export const useAppStore = create<AppState>()(
       },
 
       logoutUser: () => set({ currentUser: null, token: null }),
+
+      verifySession: async () => {
+        const { token } = get();
+        if (!token) return;
+        try {
+          await api.get<BackendUser>("/api/auth/me", token);
+        } catch {
+          // handleUnauthorized already dispatches AUTH_EXPIRED_EVENT on 401,
+          // which triggers logoutUser() via the listener below.
+        }
+      },
       
       setRole: (role) => set({ userRole: role }),
       

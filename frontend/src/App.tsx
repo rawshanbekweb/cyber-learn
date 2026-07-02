@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,6 +21,7 @@ import Assignments from "@/pages/Assignments";
 import Lessons from "@/pages/Lessons";
 import Rankings from "@/pages/Rankings";
 import { AIAssistant } from "@/components/AIAssistant";
+import { Spinner } from "@/components/ui/spinner";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +46,26 @@ function Router() {
 }
 
 function App() {
-  const { currentUser } = useAppStore();
+  const { currentUser, token, verifySession } = useAppStore();
+  const [isVerifying, setIsVerifying] = useState(!!token);
+
+  useEffect(() => {
+    if (!token) {
+      setIsVerifying(false);
+      return;
+    }
+    verifySession().finally(() => setIsVerifying(false));
+    // Only re-run when the persisted token identity changes, not on every store update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (isVerifying) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner className="size-8" />
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (
