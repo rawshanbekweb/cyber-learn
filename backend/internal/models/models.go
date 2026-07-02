@@ -63,10 +63,11 @@ type User struct {
 // ModuleProgress tracks each student's progress per module
 type ModuleProgress struct {
 	gorm.Model
-	UserID    uint `gorm:"uniqueIndex:idx_user_module;not null" json:"userId"`
-	ModuleID  uint `gorm:"uniqueIndex:idx_user_module;not null" json:"moduleId"`
-	Unlocked  bool `gorm:"default:false" json:"unlocked"`
-	Completed bool `gorm:"default:false" json:"completed"`
+	UserID    uint    `gorm:"uniqueIndex:idx_user_module;not null" json:"userId"`
+	ModuleID  uint    `gorm:"uniqueIndex:idx_user_module;not null" json:"moduleId"`
+	Unlocked  bool    `gorm:"default:false" json:"unlocked"`
+	Completed bool    `gorm:"default:false" json:"completed"`
+	Score     float64 `gorm:"default:0" json:"score"` // quiz score (0-1) from the completion attempt
 
 	Module Module `gorm:"foreignKey:ModuleID" json:"module,omitempty"`
 }

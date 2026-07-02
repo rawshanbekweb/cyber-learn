@@ -1,9 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { translateLevel } from "@/lib/utils";
-import { GraduationCap, BookOpen, AlertCircle, Plus, User, Activity, BarChart3, TrendingUp } from "lucide-react";
+import { GraduationCap, BookOpen, AlertCircle, Plus, User, Activity, BarChart3, TrendingUp, Hexagon, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ResponsiveContainer, Tooltip,
+} from "recharts";
 
 function AnalyticsCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -16,9 +20,36 @@ function AnalyticsCard({ children, className = "" }: { children: React.ReactNode
 }
 
 export default function Analytics() {
-  const { userRole, students, assignments, addAssignment, completeAssignment, currentUser, readinessScore, fuzzyMetrics, fetchStudents, fetchAssignments } = useAppStore();
+  const { userRole, students, assignments, addAssignment, completeAssignment, currentUser, readinessScore, fuzzyMetrics, moduleProgress, fetchStudents, fetchAssignments } = useAppStore();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  const moduleRadarData = useMemo(
+    () => moduleProgress.map(m => ({
+      module: m.title,
+      score: m.completed ? Math.round((m.score ?? 0) * 100) : 0,
+    })),
+    [moduleProgress]
+  );
+
+  const moduleRecommendation = useMemo(() => {
+    const completedModules = moduleProgress.filter(m => m.completed);
+    const lockedCount = moduleProgress.filter(m => !m.unlocked).length;
+
+    let text: string;
+    if (completedModules.length === 0) {
+      text = "Hali hech qanday modulni tugatmagansiz. Birinchi modulni tugating — statistikangiz shu yerda paydo bo'ladi.";
+    } else {
+      const weakest = completedModules.reduce((min, m) => (m.score ?? 0) < (min.score ?? 0) ? m : min);
+      text = (weakest.score ?? 0) < 0.85
+        ? `Eng past ko'rsatkichingiz — "${weakest.title}" (${Math.round((weakest.score ?? 0) * 100)}%). Ushbu mavzuni qayta ko'rib chiqish va tegishli dars/CTF challenge'larni yechishni tavsiya qilamiz.`
+        : "Barcha tugallangan modullar bo'yicha yuqori natija ko'rsatyapsiz! Yangi modullarni ochib, bilimingizni yanada mustahkamlang.";
+    }
+    if (lockedCount > 0) {
+      text += ` Yana ${lockedCount} ta modul ochilishini kutmoqda.`;
+    }
+    return text;
+  }, [moduleProgress]);
 
   useEffect(() => {
     if (userRole === "Teacher") fetchStudents();
@@ -223,6 +254,7 @@ export default function Analytics() {
         </div>
       ) : (
         /* ── STUDENT VIEW ── */
+        <div className="space-y-6">
         <div className="grid md:grid-cols-3 gap-6">
           {/* Left: stats */}
           <div className="md:col-span-2 space-y-5">
@@ -363,6 +395,71 @@ export default function Analytics() {
               </div>
             </AnalyticsCard>
           </div>
+        </div>
+
+        {/* Module-by-module radar */}
+        <AnalyticsCard>
+          <div className="px-5 py-4 flex items-center gap-3 bg-zinc-50/50 border-b border-zinc-100">
+            <Hexagon className="w-4 h-4 text-primary" />
+            <div>
+              <h3 className="text-sm font-bold text-zinc-950">
+                Modullar bo'yicha ko'rsatkich
+              </h3>
+              <p className="text-[10px] text-zinc-500 mt-0.5">
+                Har bir modul testidan olingan ball
+              </p>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-4">
+            <ResponsiveContainer width="100%" height={280}>
+              <RadarChart data={moduleRadarData} outerRadius="70%">
+                <PolarGrid stroke="hsl(240 6% 90%)" />
+                <PolarAngleAxis dataKey="module" tick={{ fontSize: 11, fill: "hsl(240 4% 46%)" }} />
+                <PolarRadiusAxis domain={[0, 100]} tickCount={5} tick={{ fontSize: 9, fill: "hsl(240 4% 65%)" }} />
+                <Radar
+                  name="Ball"
+                  dataKey="score"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="hsl(var(--primary))"
+                  fillOpacity={0.25}
+                  dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                  isAnimationActive
+                  animationDuration={900}
+                  animationEasing="ease-out"
+                />
+                <Tooltip
+                  formatter={(value: number) => [`${value}%`, "Ball"]}
+                  contentStyle={{ borderRadius: 12, border: "1px solid #e4e4e7", fontSize: 11 }}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+
+            {/* Accessible text breakdown, mirrors the chart */}
+            <div className="grid grid-cols-2 gap-2">
+              {moduleProgress.map(m => (
+                <div
+                  key={m.id}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-50/60 border border-zinc-100"
+                >
+                  <span className="text-[11px] font-medium text-zinc-600 truncate">{m.title}</span>
+                  <span className="text-[11px] font-bold text-zinc-800 shrink-0 ml-2">
+                    {m.completed ? `${Math.round((m.score ?? 0) * 100)}%` : "—"}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Recommendation */}
+            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/50 border border-amber-100">
+              <Lightbulb className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+              <p className="text-[11px] leading-relaxed text-zinc-700">
+                {moduleRecommendation}
+              </p>
+            </div>
+          </div>
+        </AnalyticsCard>
         </div>
       )}
     </div>

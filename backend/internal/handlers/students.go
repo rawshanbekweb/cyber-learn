@@ -28,10 +28,11 @@ type StudentResponse struct {
 }
 
 type ModuleProgressResponse struct {
-	ID        uint   `json:"id"`
-	Title     string `json:"title"`
-	Unlocked  bool   `json:"unlocked"`
-	Completed bool   `json:"completed"`
+	ID        uint    `json:"id"`
+	Title     string  `json:"title"`
+	Unlocked  bool    `json:"unlocked"`
+	Completed bool    `json:"completed"`
+	Score     float64 `json:"score"`
 }
 
 func buildStudentResponse(u models.User) StudentResponse {
@@ -65,6 +66,7 @@ func buildStudentResponse(u models.User) StudentResponse {
 			Title:     mp.Module.Title,
 			Unlocked:  mp.Unlocked,
 			Completed: mp.Completed,
+			Score:     mp.Score,
 		})
 	}
 	return resp
@@ -131,6 +133,7 @@ func GetMyProgress(c *gin.Context) {
 			Title:     mp.Module.Title,
 			Unlocked:  mp.Unlocked,
 			Completed: mp.Completed,
+			Score:     mp.Score,
 		})
 	}
 	if result == nil {

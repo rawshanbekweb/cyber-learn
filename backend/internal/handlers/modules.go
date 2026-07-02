@@ -146,8 +146,11 @@ func CompleteModule(c *gin.Context) {
 	var currentMod models.Module
 	database.DB.First(&currentMod, moduleID)
 
-	// Mark as completed
-	database.DB.Model(&mp).Update("completed", true)
+	// Mark as completed and record the quiz score for per-module analytics
+	database.DB.Model(&mp).Updates(map[string]interface{}{
+		"completed": true,
+		"score":     req.Score,
+	})
 
 	// Update student's completed modules count
 	var completedCount int64

@@ -160,7 +160,7 @@ export default function ModuleDetail() {
 
     const passed = knowledge >= PASSING_SCORE;
     setQuizPassed(passed);
-    if (passed) completeModule(id);
+    if (passed) completeModule(id, knowledge);
 
     // Best-effort backend sync so the level/unlocks the certificate check
     // relies on stay consistent with what the student sees locally.

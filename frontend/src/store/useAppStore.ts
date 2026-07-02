@@ -39,6 +39,7 @@ interface BackendModuleProgress {
   title: string;
   unlocked: boolean;
   completed: boolean;
+  score: number;
 }
 
 interface BackendStudent {
@@ -105,6 +106,7 @@ export interface ModuleProgress {
   title: string;
   unlocked: boolean;
   completed: boolean;
+  score?: number;
 }
 
 export interface AssignmentQuestion {
@@ -187,7 +189,7 @@ export interface AppState {
   verifySession: () => Promise<void>;
   setRole: (role: "Student" | "Teacher") => void;
   submitAssessment: (metrics: FuzzyMetrics) => void;
-  completeModule: (moduleId: number) => void;
+  completeModule: (moduleId: number, score?: number) => void;
   updateFuzzyWeights: (weights: Partial<FuzzyWeights>) => void;
   fetchFuzzyWeights: () => Promise<void>;
   saveFuzzyWeights: () => Promise<{ success: boolean; message?: string }>;
@@ -506,11 +508,11 @@ export const useAppStore = create<AppState>()(
         };
       }),
       
-      completeModule: (moduleId) => set((state) => {
+      completeModule: (moduleId, score) => set((state) => {
         if (!state.currentUser || state.userRole !== "Student") return {};
 
-        const newModules = state.moduleProgress.map(m => 
-          m.id === moduleId ? { ...m, completed: true } : m
+        const newModules = state.moduleProgress.map(m =>
+          m.id === moduleId ? { ...m, completed: true, score: score ?? m.score } : m
         );
 
         // Update in student array

@@ -120,6 +120,7 @@ func getStudentAnalytics(c *gin.Context, userID uint) {
 			Title:     mp.Module.Title,
 			Unlocked:  mp.Unlocked,
 			Completed: mp.Completed,
+			Score:     mp.Score,
 		})
 	}
 	if mpResp == nil {
