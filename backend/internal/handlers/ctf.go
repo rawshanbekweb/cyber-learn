@@ -134,6 +134,100 @@ func GetModuleCTFChallenges(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+type CreateCTFChallengeRequest struct {
+	ModuleID    uint   `json:"moduleId" binding:"required"`
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description"`
+	Difficulty  string `json:"difficulty"`
+	Points      int    `json:"points"`
+	Hint        string `json:"hint"`
+	Flag        string `json:"flag" binding:"required"`
+}
+
+// POST /api/ctf — Teacher creates a new CTF challenge for a module
+func CreateCTFChallenge(c *gin.Context) {
+	var req CreateCTFChallengeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Sarlavha, modul va flag kiritilishi shart"})
+		return
+	}
+
+	var module models.Module
+	if err := database.DB.First(&module, req.ModuleID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Modul topilmadi"})
+		return
+	}
+
+	difficulty := models.CTFDifficulty(req.Difficulty)
+	if difficulty != models.CTFDifficultyEasy && difficulty != models.CTFDifficultyMedium && difficulty != models.CTFDifficultyHard {
+		difficulty = models.CTFDifficultyEasy
+	}
+
+	points := req.Points
+	if points <= 0 {
+		points = 50
+	}
+
+	normalizedFlag := strings.ToLower(strings.TrimSpace(req.Flag))
+	if normalizedFlag == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Flag bo'sh bo'lishi mumkin emas"})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(normalizedFlag), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Flag hash qilishda xato"})
+		return
+	}
+
+	challenge := models.CTFChallenge{
+		ModuleID:    req.ModuleID,
+		Title:       req.Title,
+		Description: req.Description,
+		Difficulty:  difficulty,
+		Points:      points,
+		Hint:        req.Hint,
+		FlagHash:    string(hash),
+	}
+
+	if err := database.DB.Create(&challenge).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Challenge yaratishda xato"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, CTFChallengeResponse{
+		ID:          challenge.ID,
+		ModuleID:    challenge.ModuleID,
+		ModuleTitle: module.Title,
+		Title:       challenge.Title,
+		Description: challenge.Description,
+		Difficulty:  challenge.Difficulty,
+		Points:      challenge.Points,
+		Hint:        challenge.Hint,
+		Solved:      false,
+	})
+}
+
+// DELETE /api/ctf/:id — Teacher deletes a CTF challenge and its solve records
+func DeleteCTFChallenge(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Noto'g'ri ID"})
+		return
+	}
+
+	var challenge models.CTFChallenge
+	if err := database.DB.First(&challenge, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Challenge topilmadi"})
+		return
+	}
+
+	database.DB.Where("challenge_id = ?", id).Delete(&models.CTFSolve{})
+	database.DB.Delete(&challenge)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Challenge o'chirildi"})
+}
+
 type SubmitFlagRequest struct {
 	Flag string `json:"flag" binding:"required"`
 }

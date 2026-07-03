@@ -21,7 +21,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/", icon: BookOpen, label: "Ta'lim", show: true },
     { href: "/lessons", icon: BookMarked, label: userRole === "Teacher" ? "Darslar (Boshqaruv)" : "Darslar", show: true },
     { href: "/assessment", icon: Shield, label: "Kiberxavfsizlik", show: userRole === "Student" },
-    { href: "/ctf", icon: Flag, label: "CTF Challenge'lar", show: userRole === "Student" },
+    { href: "/ctf", icon: Flag, label: userRole === "Teacher" ? "CTF (Boshqaruv)" : "CTF Challenge'lar", show: true },
     { href: "/ai-engine", icon: Cpu, label: "AI Dvigateli (ANFIS)", show: true },
     { href: "/analytics", icon: BarChart3, label: "Analitika", show: true },
     { href: "/rankings", icon: Trophy, label: "Reyting", show: true },

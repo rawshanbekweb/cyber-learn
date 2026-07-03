@@ -92,6 +92,8 @@ func main() {
 			// CTF challenges (per-module and aggregated)
 			protected.GET("/modules/:id/ctf", handlers.GetModuleCTFChallenges)
 			protected.GET("/ctf", handlers.GetAllCTFChallenges)
+			protected.POST("/ctf", middleware.TeacherOnly(), handlers.CreateCTFChallenge)
+			protected.DELETE("/ctf/:id", middleware.TeacherOnly(), handlers.DeleteCTFChallenge)
 			protected.POST("/ctf/:id/submit", handlers.SubmitCTFFlag)
 
 			// Assessment (fuzzy)
