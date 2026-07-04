@@ -133,6 +133,17 @@ func seed() {
 		var modules []models.Module
 		DB.Order("order_index asc").Find(&modules)
 
+		// moduleScores[studentIdx][moduleOrderIndex] = score (0.0–1.0)
+		// Only completed modules get a non-zero score.
+		moduleScores := []map[int]float64{
+			// Davron — faqat 1-modulni tugatgan, 78%
+			{1: 0.78},
+			// Madina — 1 va 2-modulni tugatgan
+			{1: 0.82, 2: 0.75},
+			// Jasur — barcha 4 ta modulni tugatgan
+			{1: 0.91, 2: 0.88, 3: 0.85, 4: 0.95},
+		}
+
 		demoStudents := []struct {
 			name            string
 			age             int
@@ -160,10 +171,8 @@ func seed() {
 			},
 		}
 
-		for _, ds := range demoStudents {
-			// Mirrors the live XP rules: a flat bonus for the diagnostic test,
-			// plus 50 * orderIndex per completed module (module IDs here match
-			// their orderIndex since both are seeded 1..4 in the same order).
+		for si, ds := range demoStudents {
+			// XP: 30 (diagnostic bonus) + 50*orderIndex per completed module
 			xp := 30
 			for _, cid := range ds.completedMods {
 				xp += 50 * cid
@@ -187,13 +196,16 @@ func seed() {
 			}
 			DB.Create(&student)
 
+			scores := moduleScores[si]
 			for _, mod := range modules {
 				unlocked := false
 				completed := false
+				score := 0.0
 				for _, cid := range ds.completedMods {
 					if int(mod.ID) == cid {
 						completed = true
 						unlocked = true
+						score = scores[mod.OrderIndex] // real ball
 						break
 					}
 				}
@@ -212,11 +224,12 @@ func seed() {
 					ModuleID:  mod.ID,
 					Unlocked:  unlocked,
 					Completed: completed,
+					Score:     score,
 				}
 				DB.Create(&mp)
 			}
 		}
-		log.Println("Seeded 3 demo students")
+		log.Println("Seeded 3 demo students with module scores")
 	}
 
 	seedCTFChallenges()

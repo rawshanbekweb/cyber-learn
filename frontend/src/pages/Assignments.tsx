@@ -362,7 +362,7 @@ export default function Assignments() {
               onChange={e => setFilterStudent(e.target.value === "all" ? "all" : Number(e.target.value))}
               className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 bg-white outline-none w-48 font-medium text-zinc-700"
             >
-              <option value="all">👥 Hamma o'quvchilar</option>
+              <option value="all">Hamma o'quvchilar</option>
               {students.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}

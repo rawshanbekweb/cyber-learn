@@ -201,6 +201,7 @@ export interface AppState {
   addLesson: (lesson: Omit<Lesson, 'id' | 'createdAt' | 'readByStudents'>) => Promise<{ success: boolean; message?: string }>;
   deleteLesson: (lessonId: number) => Promise<{ success: boolean; message?: string }>;
   markLessonRead: (lessonId: number) => Promise<{ success: boolean; message?: string }>;
+  deleteStudent: (studentId: number) => Promise<{ success: boolean; message?: string }>;
   resetProgress: () => void;
 }
 
@@ -630,6 +631,17 @@ export const useAppStore = create<AppState>()(
           const data = await api.get<BackendStudent[]>("/api/students", token);
           set({ students: data.map(backendStudentToStudent) });
         } catch { /* keep existing local list if this fails */ }
+      },
+
+      deleteStudent: async (studentId) => {
+        const { token } = get();
+        try {
+          await api.del(`/api/students/${studentId}`, token);
+          set((state) => ({ students: state.students.filter(s => s.id !== studentId) }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, message: err instanceof Error ? err.message : "O'chirishda xatolik" };
+        }
       },
 
       fetchAssignments: async () => {

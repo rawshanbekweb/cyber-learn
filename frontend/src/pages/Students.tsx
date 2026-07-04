@@ -2,11 +2,24 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAppStore } from "@/store/useAppStore";
 import { translateLevel } from "@/lib/utils";
-import { Users, User, ChevronRight, GraduationCap } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Users, User, ChevronRight, GraduationCap, Trash2 } from "lucide-react";
 
 export default function Students() {
-  const { students, userRole, fetchStudents } = useAppStore();
+  const { students, userRole, fetchStudents, deleteStudent } = useAppStore();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const handleDelete = async (e: React.MouseEvent, studentId: number, studentName: string) => {
+    e.stopPropagation();
+    if (!window.confirm(`${studentName} ni butunlay o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.`)) return;
+    const res = await deleteStudent(studentId);
+    if (res.success) {
+      toast({ title: "O'quvchi o'chirildi" });
+    } else {
+      toast({ variant: "destructive", title: "Xatolik", description: res.message });
+    }
+  };
 
   useEffect(() => {
     if (userRole === "Teacher") fetchStudents();
@@ -59,6 +72,13 @@ export default function Students() {
                   <div className="font-bold text-sm text-zinc-900 truncate">{student.name}</div>
                   <div className="text-[10px] text-zinc-500">{student.age} yosh</div>
                 </div>
+                <button
+                  onClick={e => handleDelete(e, student.id, student.name)}
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                  title="O'quvchini o'chirish"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
                 <ChevronRight className="w-4 h-4 text-zinc-300 shrink-0" />
               </div>
 

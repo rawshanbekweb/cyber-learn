@@ -81,6 +81,7 @@ func main() {
 		{
 			// Students
 			protected.GET("/students", middleware.TeacherOnly(), handlers.GetStudents)
+			protected.DELETE("/students/:id", middleware.TeacherOnly(), handlers.DeleteStudent)
 			protected.GET("/students/me/progress", handlers.GetMyProgress)
 			protected.GET("/students/:id", handlers.GetStudent)
 

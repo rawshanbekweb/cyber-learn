@@ -1,14 +1,17 @@
 import { useEffect } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, useLocation, Link } from "wouter";
 import { useAppStore } from "@/store/useAppStore";
 import { translateLevel } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import { ModuleRadarChart } from "@/components/ModuleRadarChart";
-import { ArrowLeft, User, Hexagon, AlertTriangle, GraduationCap } from "lucide-react";
+import { ArrowLeft, User, Hexagon, AlertTriangle, GraduationCap, Trash2 } from "lucide-react";
 
 export default function StudentDetail() {
   const [, params] = useRoute("/students/:id");
   const id = params?.id ? parseInt(params.id) : null;
-  const { students, userRole, fetchStudents } = useAppStore();
+  const { students, userRole, fetchStudents, deleteStudent } = useAppStore();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (userRole === "Teacher") fetchStudents();
@@ -52,10 +55,26 @@ export default function StudentDetail() {
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-indigo-50 border border-indigo-100/50">
           <User className="w-7 h-7 text-primary" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{student.name}</h1>
           <p className="text-xs text-zinc-500">{student.age} yosh &middot; {translateLevel(student.level)}</p>
         </div>
+        <button
+          onClick={async () => {
+            if (!window.confirm(`${student.name} ni butunlay o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.`)) return;
+            const res = await deleteStudent(student.id);
+            if (res.success) {
+              toast({ title: "O'quvchi o'chirildi" });
+              setLocation("/students");
+            } else {
+              toast({ variant: "destructive", title: "Xatolik", description: res.message });
+            }
+          }}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-all cursor-pointer shrink-0"
+          title="O'quvchini o'chirish"
+        >
+          <Trash2 className="w-4 h-4" /> O'chirish
+        </button>
       </div>
 
       {/* Stats */}

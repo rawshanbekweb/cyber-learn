@@ -147,3 +147,35 @@ func GetMyProgress(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, result)
 }
+
+// DELETE /api/students/:id — Teacher only; removes student and all related data
+func DeleteStudent(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Noto'g'ri ID"})
+		return
+	}
+
+	// Make sure target is actually a student
+	var user models.User
+	if err := database.DB.Where("role = ? AND id = ?", models.RoleStudent, id).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "O'quvchi topilmadi"})
+		return
+	}
+
+	// Cascade-delete related rows first (GORM soft-delete won't cascade automatically)
+	database.DB.Where("user_id = ?", id).Delete(&models.ModuleProgress{})
+	database.DB.Where("student_id = ?", id).Delete(&models.Assignment{})
+	database.DB.Where("user_id = ?", id).Delete(&models.CTFSolve{})
+	database.DB.Where("user_id = ?", id).Delete(&models.Certificate{})
+	database.DB.Where("user_id = ?", id).Delete(&models.LessonRead{})
+
+	// Delete the user itself
+	if err := database.DB.Delete(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "O'quvchini o'chirishda xatolik"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "O'quvchi muvaffaqiyatli o'chirildi"})
+}
