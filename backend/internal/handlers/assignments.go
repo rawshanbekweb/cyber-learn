@@ -22,7 +22,8 @@ type AssignmentQuestionRequest struct {
 type AssignmentRequest struct {
 	Title          string                      `json:"title" binding:"required,min=2"`
 	Description    string                      `json:"description"`
-	StudentID      uint                        `json:"studentId" binding:"required"`
+	StudentID      uint                        `json:"studentId"`
+	AllStudents    bool                        `json:"allStudents"`
 	TargetModuleID uint                        `json:"targetModuleId" binding:"required"`
 	AssignmentType string                      `json:"assignmentType"`
 	Questions      []AssignmentQuestionRequest `json:"questions"`
@@ -142,11 +143,25 @@ func CreateAssignment(c *gin.Context) {
 		return
 	}
 
-	// Verify student exists
-	var student models.User
-	if err := database.DB.Where("id = ? AND role = ?", req.StudentID, models.RoleStudent).First(&student).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "O'quvchi topilmadi"})
-		return
+	// Resolve target students: one specific student, or every student.
+	var targets []models.User
+	if req.AllStudents {
+		database.DB.Where("role = ?", models.RoleStudent).Find(&targets)
+		if len(targets) == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "O'quvchilar topilmadi"})
+			return
+		}
+	} else {
+		if req.StudentID == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "O'quvchi tanlanmagan"})
+			return
+		}
+		var student models.User
+		if err := database.DB.Where("id = ? AND role = ?", req.StudentID, models.RoleStudent).First(&student).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "O'quvchi topilmadi"})
+			return
+		}
+		targets = []models.User{student}
 	}
 
 	assignmentType := models.AssignmentType(req.AssignmentType)
@@ -154,42 +169,51 @@ func CreateAssignment(c *gin.Context) {
 		assignmentType = models.AssignmentTypeNazariy
 	}
 
-	assignment := models.Assignment{
-		Title:          req.Title,
-		Description:    req.Description,
-		StudentID:      req.StudentID,
-		StudentName:    student.Name,
-		TargetModuleID: req.TargetModuleID,
-		AssignmentType: assignmentType,
-		Completed:      false,
-		DateAssigned:   time.Now(),
+	created := make([]AssignmentResponse, 0, len(targets))
+	for _, student := range targets {
+		assignment := models.Assignment{
+			Title:          req.Title,
+			Description:    req.Description,
+			StudentID:      student.ID,
+			StudentName:    student.Name,
+			TargetModuleID: req.TargetModuleID,
+			AssignmentType: assignmentType,
+			Completed:      false,
+			DateAssigned:   time.Now(),
+		}
+
+		if err := database.DB.Create(&assignment).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Topshiriq yaratishda xato"})
+			return
+		}
+
+		// Create questions
+		for _, qr := range req.Questions {
+			optsJSON, _ := json.Marshal(qr.Options)
+			q := models.AssignmentQuestion{
+				AssignmentID:  assignment.ID,
+				Question:      qr.Question,
+				Options:       string(optsJSON),
+				CorrectAnswer: qr.CorrectAnswer,
+			}
+			database.DB.Create(&q)
+		}
+
+		// Unlock target module for student
+		var mp models.ModuleProgress
+		if database.DB.Where("user_id = ? AND module_id = ?", student.ID, req.TargetModuleID).First(&mp).Error == nil {
+			database.DB.Model(&mp).Update("unlocked", true)
+		}
+
+		database.DB.Preload("Questions").First(&assignment, assignment.ID)
+		created = append(created, buildAssignmentResponse(assignment))
 	}
 
-	if err := database.DB.Create(&assignment).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Topshiriq yaratishda xato"})
+	if req.AllStudents {
+		c.JSON(http.StatusCreated, gin.H{"createdCount": len(created), "assignments": created})
 		return
 	}
-
-	// Create questions
-	for _, qr := range req.Questions {
-		optsJSON, _ := json.Marshal(qr.Options)
-		q := models.AssignmentQuestion{
-			AssignmentID:  assignment.ID,
-			Question:      qr.Question,
-			Options:       string(optsJSON),
-			CorrectAnswer: qr.CorrectAnswer,
-		}
-		database.DB.Create(&q)
-	}
-
-	// Unlock target module for student
-	var mp models.ModuleProgress
-	if database.DB.Where("user_id = ? AND module_id = ?", req.StudentID, req.TargetModuleID).First(&mp).Error == nil {
-		database.DB.Model(&mp).Update("unlocked", true)
-	}
-
-	database.DB.Preload("Questions").First(&assignment, assignment.ID)
-	c.JSON(http.StatusCreated, buildAssignmentResponse(assignment))
+	c.JSON(http.StatusCreated, created[0])
 }
 
 // POST /api/assignments/:id/complete — Student completes assignment

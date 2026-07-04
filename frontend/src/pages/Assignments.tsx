@@ -23,10 +23,12 @@ export default function Assignments() {
 
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<number>(students[0]?.id ?? 1);
+  // 0 = "hamma o'quvchilar" (assign to everyone at once)
+  const [selectedStudent, setSelectedStudent] = useState<number>(0);
   const [selectedModule, setSelectedModule] = useState<number>(1);
   const [questions, setQuestions] = useState<AssignmentQuestion[]>([]);
   const [expandedAssignment, setExpandedAssignment] = useState<number | null>(null);
+  const [filterStudent, setFilterStudent] = useState<number | "all">("all");
 
   const [newQuestion, setNewQuestion] = useState("");
   const [newOptions, setNewOptions] = useState(["", "", "", ""]);
@@ -65,19 +67,25 @@ export default function Assignments() {
       toast({ variant: "destructive", title: "❌ Topshiriq yuborilmadi", description: res.message });
       return;
     }
+    const target = selectedStudent === 0
+      ? `Hamma o'quvchilarga (${students.length} ta)`
+      : "O'quvchiga";
     toast({
       title: "✅ Topshiriq yuborildi!",
-      description: `O'quvchiga ${questions.length > 0 ? questions.length + " ta savol bilan " : ""}topshiriq muvaffaqiyatli biriktirildi.`,
+      description: `${target} ${questions.length > 0 ? questions.length + " ta savol bilan " : ""}topshiriq muvaffaqiyatli biriktirildi.`,
     });
     setTaskTitle("");
     setTaskDescription("");
     setQuestions([]);
-    setSelectedStudent(students[0]?.id ?? 1);
+    setSelectedStudent(0);
     setSelectedModule(1);
   };
 
   const pending = assignments.filter(a => !a.completed);
   const done = assignments.filter(a => a.completed);
+
+  const filteredPending = pending.filter(a => filterStudent === "all" || a.studentId === filterStudent);
+  const filteredDone = done.filter(a => filterStudent === "all" || a.studentId === filterStudent);
 
   const pageVariants = {
     hidden: { opacity: 0, y: 16 },
@@ -168,6 +176,7 @@ export default function Assignments() {
                       onChange={e => setSelectedStudent(Number(e.target.value))}
                       className="w-full"
                     >
+                      <option value={0}>👥 Hamma o'quvchilar</option>
                       {students.map(s => (
                         <option key={s.id} value={s.id}>{s.name} ({translateLevel(s.level)})</option>
                       ))}
@@ -342,6 +351,24 @@ export default function Assignments() {
 
         {/* ── RIGHT: Assignment List ── */}
         <div className="space-y-6">
+          {/* Student Filter Dropdown */}
+          <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-xs flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
+              <span className="text-xs font-bold text-zinc-700">Topshiriqlarni filtrlash:</span>
+            </div>
+            <select
+              value={filterStudent}
+              onChange={e => setFilterStudent(e.target.value === "all" ? "all" : Number(e.target.value))}
+              className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 bg-white outline-none w-48 font-medium text-zinc-700"
+            >
+              <option value="all">👥 Hamma o'quvchilar</option>
+              {students.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Pending */}
           <div className="rounded-2xl border border-zinc-200 bg-white shadow-xs overflow-hidden">
             <div className="px-5 py-4 flex items-center gap-2.5 bg-zinc-50/50 border-b border-zinc-200">
@@ -350,16 +377,16 @@ export default function Assignments() {
                 Kutilayotgan topshiriqlar
               </span>
               <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-semibold">
-                {pending.length} ta
+                {filteredPending.length} ta
               </span>
             </div>
             <div className="p-4 space-y-3">
-              {pending.length === 0 ? (
+              {filteredPending.length === 0 ? (
                 <div className="text-center py-8 text-xs text-zinc-400">
                   Kutilayotgan topshiriqlar yo'q.
                 </div>
               ) : (
-                pending.map(as => (
+                filteredPending.map(as => (
                   <AssignmentCard
                       key={as.id}
                       assignment={as}
@@ -380,7 +407,7 @@ export default function Assignments() {
           </div>
 
           {/* Completed */}
-          {done.length > 0 && (
+          {filteredDone.length > 0 && (
             <div className="rounded-2xl border border-zinc-200 bg-white shadow-xs overflow-hidden">
               <div className="px-5 py-4 flex items-center gap-2.5 bg-zinc-50/50 border-b border-zinc-200">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -388,11 +415,11 @@ export default function Assignments() {
                   Bajarilgan topshiriqlar
                 </span>
                 <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold">
-                  {done.length} ta
+                  {filteredDone.length} ta
                 </span>
               </div>
               <div className="p-4 space-y-3">
-                {done.map(as => (
+                {filteredDone.map(as => (
                   <AssignmentCard
                     key={as.id}
                     assignment={as}

@@ -642,18 +642,28 @@ export const useAppStore = create<AppState>()(
 
       addAssignment: async (title, studentId, targetModuleId, questions = [], description = "", assignmentType = "Nazariy") => {
         const { token } = get();
+        const payload = {
+          title,
+          description,
+          targetModuleId,
+          assignmentType,
+          questions: questions.map(q => ({
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+          })),
+        };
         try {
+          // studentId === 0 → assign to every student at once.
+          if (studentId === 0) {
+            await api.post("/api/assignments", { ...payload, allStudents: true }, token);
+            await get().fetchAssignments();
+            return { success: true };
+          }
+
           const created = await api.post<BackendAssignment>("/api/assignments", {
-            title,
-            description,
+            ...payload,
             studentId,
-            targetModuleId,
-            assignmentType,
-            questions: questions.map(q => ({
-              question: q.question,
-              options: q.options,
-              correctAnswer: q.correctAnswer,
-            })),
           }, token);
 
           set((state) => ({

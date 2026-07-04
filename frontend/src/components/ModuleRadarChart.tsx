@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip,
@@ -17,10 +18,69 @@ export const MODULE_COLORS = [
 ];
 
 export function ModuleRadarChart({ moduleProgress }: { moduleProgress: ModuleProgress[] }) {
-  const data = moduleProgress.map(m => ({
-    module: m.title,
-    score: m.completed ? Math.round((m.score ?? 0) * 100) : 0,
-  }));
+  // Gentle wobble / breathing state
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => setPhase(p => p + 1), 1800);
+    return () => clearInterval(id);
+  }, []);
+
+  // Smooth score transition animation state
+  const [animatedScores, setAnimatedScores] = useState<number[]>([]);
+
+  useEffect(() => {
+    const targetScores = moduleProgress.map(m => m.completed ? Math.round((m.score ?? 0) * 100) : 0);
+    
+    // If empty or length mismatch, initialize with 0
+    let startScores = animatedScores;
+    if (animatedScores.length !== targetScores.length) {
+      startScores = targetScores.map(() => 0);
+      setAnimatedScores(startScores);
+    }
+
+    const duration = 1200; // 1.2s transition
+    const startTime = performance.now();
+
+    let animationFrameId: number;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function (easeOutCubic)
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      const nextScores = targetScores.map((target, idx) => {
+        const start = startScores[idx] ?? 0;
+        return start + (target - start) * ease;
+      });
+
+      setAnimatedScores(nextScores);
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [moduleProgress]);
+
+  const data = moduleProgress.map((m, i) => {
+    const score = animatedScores[i] ?? 0;
+    // Wobble amplitude scales with the result: strong scores look lively,
+    // zero scores stay pinned to the center.
+    const amp = score * 0.05;
+    const wobble = amp * Math.sin(phase * 1.1 + i * 1.9);
+    return {
+      module: m.title,
+      score: m.completed ? Math.round((m.score ?? 0) * 100) : 0,
+      display: Math.min(100, Math.max(0, score + wobble)),
+    };
+  });
 
   return (
     <div className="space-y-4">
@@ -31,7 +91,7 @@ export function ModuleRadarChart({ moduleProgress }: { moduleProgress: ModulePro
           <PolarRadiusAxis domain={[0, 100]} tickCount={5} tick={{ fontSize: 9, fill: "hsl(240 4% 65%)" }} />
           <Radar
             name="Ball"
-            dataKey="score"
+            dataKey="display"
             stroke="hsl(var(--primary))"
             strokeWidth={2}
             fill="hsl(var(--primary))"
@@ -51,11 +111,12 @@ export function ModuleRadarChart({ moduleProgress }: { moduleProgress: ModulePro
               );
             }}
             isAnimationActive
-            animationDuration={900}
-            animationEasing="ease-out"
+            animationDuration={1700}
+            animationEasing="ease-in-out"
           />
           <Tooltip
-            formatter={(value: number) => [`${value}%`, "Ball"]}
+            // Show the real score, not the wobbled display value.
+            formatter={(_value: number, _name, item: any) => [`${item?.payload?.score ?? 0}%`, "Ball"]}
             contentStyle={{ borderRadius: 12, border: "1px solid #e4e4e7", fontSize: 11 }}
           />
         </RadarChart>
