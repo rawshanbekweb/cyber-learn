@@ -108,6 +108,17 @@ type Lesson struct {
 	ReadByStudents []User `gorm:"many2many:lesson_reads;" json:"readByStudents,omitempty"`
 }
 
+// UploadedFile stores lesson material bytes directly in Postgres so they
+// survive container restarts/redeploys (the app's disk is ephemeral).
+type UploadedFile struct {
+	gorm.Model
+	StoredName   string `gorm:"uniqueIndex;not null" json:"storedName"`
+	OriginalName string `json:"originalName"`
+	ContentType  string `json:"contentType"`
+	Size         int64  `json:"size"`
+	Data         []byte `gorm:"type:bytea" json:"-"`
+}
+
 // LessonRead tracks which students read which lessons
 type LessonRead struct {
 	LessonID uint      `gorm:"primaryKey" json:"lessonId"`

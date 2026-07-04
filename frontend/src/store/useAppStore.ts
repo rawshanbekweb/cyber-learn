@@ -206,7 +206,7 @@ export interface AppState {
 
 const initialModules: ModuleProgress[] = [
   { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: false },
-  { id: 2, title: "Tarmoq xavflari", unlocked: false, completed: false },
+  { id: 2, title: "Tarmoq xavsizligi", unlocked: false, completed: false },
   { id: 3, title: "Kriptografiya", unlocked: false, completed: false },
   { id: 4, title: "Tizim himoyasi", unlocked: false, completed: false },
 ];
@@ -233,7 +233,7 @@ const initialStudents: Student[] = [
     hasCompletedInitialTest: true,
     moduleProgress: [
       { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: true },
-      { id: 2, title: "Tarmoq xavflari", unlocked: false, completed: false },
+      { id: 2, title: "Tarmoq xavsizligi", unlocked: false, completed: false },
       { id: 3, title: "Kriptografiya", unlocked: false, completed: false },
       { id: 4, title: "Tizim himoyasi", unlocked: false, completed: false },
     ],
@@ -252,7 +252,7 @@ const initialStudents: Student[] = [
     hasCompletedInitialTest: true,
     moduleProgress: [
       { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: true },
-      { id: 2, title: "Tarmoq xavflari", unlocked: true, completed: true },
+      { id: 2, title: "Tarmoq xavsizligi", unlocked: true, completed: true },
       { id: 3, title: "Kriptografiya", unlocked: false, completed: false },
       { id: 4, title: "Tizim himoyasi", unlocked: false, completed: false },
     ],
@@ -271,7 +271,7 @@ const initialStudents: Student[] = [
     hasCompletedInitialTest: true,
     moduleProgress: [
       { id: 1, title: "Kiberxavfsizlik asoslari", unlocked: true, completed: true },
-      { id: 2, title: "Tarmoq xavflari", unlocked: true, completed: true },
+      { id: 2, title: "Tarmoq xavsizligi", unlocked: true, completed: true },
       { id: 3, title: "Kriptografiya", unlocked: true, completed: true },
       { id: 4, title: "Tizim himoyasi", unlocked: true, completed: true },
     ],
@@ -452,7 +452,26 @@ export const useAppStore = create<AppState>()(
         const { token } = get();
         if (!token) return;
         try {
-          await api.get<BackendUser>("/api/auth/me", token);
+          const u = await api.get<BackendUser>("/api/auth/me", token);
+          if (u.role !== "Student") return;
+
+          // Re-sync module progress/scores from the backend on every reload —
+          // the persisted local snapshot can go stale (e.g. progress made in
+          // another browser/session), and this is what the analytics chart reads.
+          let moduleProgress: ModuleProgress[] = get().moduleProgress;
+          try {
+            moduleProgress = await api.get<BackendModuleProgress[]>("/api/students/me/progress", token);
+          } catch { /* keep existing local snapshot if this fails */ }
+
+          set((state) => ({
+            hasCompletedInitialTest: u.hasCompletedInitialTest,
+            currentLevel: u.level,
+            readinessScore: u.fuzzyScore,
+            fuzzyMetrics: { knowledge: u.diagnosticScore, errors: u.errors, speed: u.speed },
+            lastFuzzyResult: u.hasFuzzyResult && u.lastFuzzyResult ? u.lastFuzzyResult : null,
+            moduleProgress,
+            students: upsertStudent(state.students, backendUserToStudent(u, moduleProgress)),
+          }));
         } catch {
           // handleUnauthorized already dispatches AUTH_EXPIRED_EVENT on 401,
           // which triggers logoutUser() via the listener below.

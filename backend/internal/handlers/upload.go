@@ -2,12 +2,16 @@ package handlers
 
 import (
 	"fmt"
+	"io"
+	"mime"
 	"net/http"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"cyberai-backend/internal/database"
+	"cyberai-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,13 +28,15 @@ var (
 	unsafeFileChars = regexp.MustCompile(`[^a-zA-Z0-9]`)
 )
 
-// POST /api/upload
+// POST /api/upload — stores the file's bytes in Postgres (not local disk) so
+// they survive container restarts/redeploys on the hosting platform.
 func UploadFile(c *gin.Context) {
-	_, header, err := c.Request.FormFile("file")
+	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Fayl topilmadi"})
 		return
 	}
+	defer file.Close()
 
 	const maxSize int64 = 64 << 20 // 64 MB
 	if header.Size > maxSize {
@@ -44,9 +50,9 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	uploadDir := "./uploads"
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Papka yaratishda xato"})
+	data, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Faylni o'qishda xato"})
 		return
 	}
 
@@ -56,16 +62,42 @@ func UploadFile(c *gin.Context) {
 		safeName = safeName[:40]
 	}
 	uniqueName := fmt.Sprintf("%d_%s%s", time.Now().UnixNano(), safeName, ext)
-	destPath := filepath.Join(uploadDir, uniqueName)
 
-	if err := c.SaveUploadedFile(header, destPath); err != nil {
+	contentType := mime.TypeByExtension(ext)
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	uploaded := models.UploadedFile{
+		StoredName:   uniqueName,
+		OriginalName: header.Filename,
+		ContentType:  contentType,
+		Size:         header.Size,
+		Data:         data,
+	}
+	if err := database.DB.Create(&uploaded).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Fayl saqlashda xato"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"url":  "/uploads/" + uniqueName,
+		"url":  "/api/files/" + uniqueName,
 		"name": header.Filename,
 		"size": header.Size,
 	})
+}
+
+// GET /api/files/:name — serves a previously uploaded file's bytes straight
+// from Postgres, inline (so PDFs render in an iframe instead of downloading).
+func GetUploadedFile(c *gin.Context) {
+	name := c.Param("name")
+
+	var uploaded models.UploadedFile
+	if err := database.DB.Where("stored_name = ?", name).First(&uploaded).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Fayl topilmadi"})
+		return
+	}
+
+	c.Header("Content-Disposition", "inline; filename=\""+uploaded.OriginalName+"\"")
+	c.Data(http.StatusOK, uploaded.ContentType, uploaded.Data)
 }

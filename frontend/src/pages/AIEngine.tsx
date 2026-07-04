@@ -65,7 +65,7 @@ export default function AIEngine() {
     { title: "3. Fuzzy bilimlarni baholash", desc: "Noma'lumlikka asoslangan (Past / O'rta / Yuqori) baholash mexanizmi.", active: hasCompletedInitialTest },
     { title: "4. Adaptiv traektoriya tanlash (ANFIS)", desc: "A'zolik funksiyalari orqali individual qoidalar asosida o'quv yo'li aniqlanadi.", active: hasCompletedInitialTest },
     { title: "5. Shaxsiy o'quv dasturi generatsiyasi", desc: `Agar-qoidalar orqali aniqlanadi: Hozirgi darajangiz — ${translateLevel(currentLevel)}`, active: hasCompletedInitialTest },
-    { title: "6. O'quv modullari", desc: "1. InfoSec asoslari | 2. Tarmoq xavflari | 3. Kriptografiya | 4. Tizim himoyasi", active: hasCompletedInitialTest },
+    { title: "6. O'quv modullari", desc: "1. InfoSec asoslari | 2. Tarmoq xavsizligi | 3. Kriptografiya | 4. Tizim himoyasi", active: hasCompletedInitialTest },
     { title: "7. Fuzzy o'zlashtirish tahlili", desc: "To'g'rilik foizi, xatolar soni va topshiriqni bajarish tezligi baholanadi.", active: hasCompletedInitialTest },
     { title: "8. O'tish qarori", desc: `Fuzzy ko'rsatkich: ${(readinessScore * 100).toFixed(0)}% (Agar natija = Yuqori bo'lsa oldinga o'ting, agar O'rta bo'lsa takrorlang)`, active: hasCompletedInitialTest },
   ];

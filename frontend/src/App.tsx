@@ -18,6 +18,8 @@ import AIEngine from "@/pages/AIEngine";
 import Analytics from "@/pages/Analytics";
 import AuthPage from "@/pages/AuthPage";
 import Assignments from "@/pages/Assignments";
+import Students from "@/pages/Students";
+import StudentDetail from "@/pages/StudentDetail";
 import Lessons from "@/pages/Lessons";
 import Rankings from "@/pages/Rankings";
 import News from "@/pages/News";
@@ -39,6 +41,8 @@ function Router() {
         <Route path="/ai-engine" component={AIEngine} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/assignments" component={Assignments} />
+        <Route path="/students" component={Students} />
+        <Route path="/students/:id" component={StudentDetail} />
         <Route path="/lessons" component={Lessons} />
         <Route path="/rankings" component={Rankings} />
         <Route path="/news" component={News} />

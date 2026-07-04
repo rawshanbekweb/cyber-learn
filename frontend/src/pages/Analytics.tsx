@@ -4,10 +4,7 @@ import { translateLevel } from "@/lib/utils";
 import { GraduationCap, BookOpen, AlertCircle, Plus, User, Activity, BarChart3, TrendingUp, Hexagon, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import {
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  ResponsiveContainer, Tooltip,
-} from "recharts";
+import { ModuleRadarChart } from "@/components/ModuleRadarChart";
 
 function AnalyticsCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -23,14 +20,6 @@ export default function Analytics() {
   const { userRole, students, assignments, addAssignment, completeAssignment, currentUser, readinessScore, fuzzyMetrics, moduleProgress, fetchStudents, fetchAssignments } = useAppStore();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-
-  const moduleRadarData = useMemo(
-    () => moduleProgress.map(m => ({
-      module: m.title,
-      score: m.completed ? Math.round((m.score ?? 0) * 100) : 0,
-    })),
-    [moduleProgress]
-  );
 
   const moduleRecommendation = useMemo(() => {
     const completedModules = moduleProgress.filter(m => m.completed);
@@ -412,44 +401,7 @@ export default function Analytics() {
           </div>
 
           <div className="p-5 space-y-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <RadarChart data={moduleRadarData} outerRadius="70%">
-                <PolarGrid stroke="hsl(240 6% 90%)" />
-                <PolarAngleAxis dataKey="module" tick={{ fontSize: 11, fill: "hsl(240 4% 46%)" }} />
-                <PolarRadiusAxis domain={[0, 100]} tickCount={5} tick={{ fontSize: 9, fill: "hsl(240 4% 65%)" }} />
-                <Radar
-                  name="Ball"
-                  dataKey="score"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fill="hsl(var(--primary))"
-                  fillOpacity={0.25}
-                  dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
-                  isAnimationActive
-                  animationDuration={900}
-                  animationEasing="ease-out"
-                />
-                <Tooltip
-                  formatter={(value: number) => [`${value}%`, "Ball"]}
-                  contentStyle={{ borderRadius: 12, border: "1px solid #e4e4e7", fontSize: 11 }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-
-            {/* Accessible text breakdown, mirrors the chart */}
-            <div className="grid grid-cols-2 gap-2">
-              {moduleProgress.map(m => (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-50/60 border border-zinc-100"
-                >
-                  <span className="text-[11px] font-medium text-zinc-600 truncate">{m.title}</span>
-                  <span className="text-[11px] font-bold text-zinc-800 shrink-0 ml-2">
-                    {m.completed ? `${Math.round((m.score ?? 0) * 100)}%` : "—"}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <ModuleRadarChart moduleProgress={moduleProgress} />
 
             {/* Recommendation */}
             <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50/50 border border-amber-100">

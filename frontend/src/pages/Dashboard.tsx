@@ -39,7 +39,7 @@ export default function Dashboard() {
   const getRecommendation = () => {
     if (!hasCompletedInitialTest) return { title: "Dastlabki diagnostika testi", reason: "Fuzzy hisoblash asosida boshlang'ich o'quv yo'lingiz aniqlanadi.", path: "/assessment" };
     if (currentLevel === "Beginner") return { title: "Kiberxavfsizlik asoslari", reason: "Fuzzy hisoblash asosida asoslarni mustahkamlang.", path: "/module/1" };
-    if (currentLevel === "Intermediate") return { title: "Tarmoq xavflari", reason: "Fuzzy hisoblash asosida qiyinchilikni oshiring.", path: "/module/2" };
+    if (currentLevel === "Intermediate") return { title: "Tarmoq xavsizligi", reason: "Fuzzy hisoblash asosida qiyinchilikni oshiring.", path: "/module/2" };
     const cryptoModule = moduleProgress.find(m => m.id === 3);
     if (cryptoModule && !cryptoModule.completed) return { title: "Kriptografiya", reason: "Fuzzy hisoblash asosida ilg'or kripto va tizim himoyasiga o'ting.", path: "/module/3" };
     return { title: "Tizim himoyasi", reason: "Fuzzy hisoblash asosida ilg'or tizim himoyasi moduliga o'ting.", path: "/module/4" };

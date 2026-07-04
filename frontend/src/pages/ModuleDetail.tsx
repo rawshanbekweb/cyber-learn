@@ -28,7 +28,7 @@ const moduleData = {
     ]
   },
   2: {
-    title: "Tarmoq Xavflari", icon: Wifi,
+    title: "Tarmoq Xavsizligi", icon: Wifi,
     content: "Tarmoq xavfsizligi tarmoq va ma'lumotlarning yaxlitligi va foydalanish qobiliyatini himoya qiladi. Keng tarqalgan tahdidlar: Man-in-the-Middle (MitM), DDoS, paket ushlash va port tekshiruvi. Firewall, IDS/IPS va VPN asosiy himoya choralari hisoblanadi.",
     concepts: ["Firewall", "IDS/IPS", "VPN", "DDoS Himoyasi"],
     quiz: [

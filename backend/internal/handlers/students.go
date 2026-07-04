@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 
 	"cyberai-backend/internal/database"
@@ -59,8 +60,13 @@ func buildStudentResponse(u models.User) StudentResponse {
 			Rule3: u.LastFuzzyRule3,
 		}
 	}
-	// Build module progress
-	for _, mp := range u.ModuleProgresses {
+	// Build module progress — always in module order, regardless of the
+	// order GORM's preload happened to return rows in.
+	progresses := make([]models.ModuleProgress, len(u.ModuleProgresses))
+	copy(progresses, u.ModuleProgresses)
+	sort.Slice(progresses, func(i, j int) bool { return progresses[i].ModuleID < progresses[j].ModuleID })
+
+	for _, mp := range progresses {
 		resp.ModuleProgress = append(resp.ModuleProgress, ModuleProgressResponse{
 			ID:        mp.ModuleID,
 			Title:     mp.Module.Title,

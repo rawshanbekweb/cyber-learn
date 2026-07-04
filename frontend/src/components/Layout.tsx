@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import {
   BookOpen, Shield, Cpu, BarChart3,
-  UserCheck, ShieldCheck, LogOut, User,
+  UserCheck, ShieldCheck, LogOut, User, Users,
   ClipboardList, BookMarked, Terminal, Activity, Trophy, Award, Newspaper, Flag
 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
@@ -20,6 +20,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const navItems = [
     { href: "/", icon: BookOpen, label: "Ta'lim", show: true },
     { href: "/lessons", icon: BookMarked, label: userRole === "Teacher" ? "Darslar (Boshqaruv)" : "Darslar", show: true },
+    { href: "/students", icon: Users, label: "O'quvchilar", show: userRole === "Teacher" },
     { href: "/assessment", icon: Shield, label: "Kiberxavfsizlik", show: userRole === "Student" },
     { href: "/ctf", icon: Flag, label: userRole === "Teacher" ? "CTF (Boshqaruv)" : "CTF Challenge'lar", show: true },
     { href: "/ai-engine", icon: Cpu, label: "AI Dvigateli (ANFIS)", show: true },

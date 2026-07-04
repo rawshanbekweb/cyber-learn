@@ -43,6 +43,7 @@ func Init() {
 		&models.ModuleProgress{},
 		&models.Lesson{},
 		&models.LessonRead{},
+		&models.UploadedFile{},
 		&models.Assignment{},
 		&models.AssignmentQuestion{},
 		&models.FuzzyWeights{},
@@ -85,7 +86,7 @@ func seed() {
 				Content:     "Kiberxavfsizlik tizimlar, tarmoqlar va ilovalarni raqamli hujumlardan himoya qilish amaliyotidir. CIA Triadi — Maxfiylik, Butunlik va Mavjudlik — barcha xavfsizlik printsiplarining asosini tashkil etadi. Maxfiylik faqat ruxsat etilgan tomonlarga ma'lumotga kirishga imkon beradi. Butunlik ma'lumotning o'zgarmasligini ta'minlaydi. Mavjudlik esa tizimlarning kerak paytda ishlashini kafolatlaydi.",
 			},
 			{
-				Title:       "Tarmoq xavflari",
+				Title:       "Tarmoq xavsizligi",
 				OrderIndex:  2,
 				Description: "Tarmoq hujumlarini - Man-in-the-Middle, DDoS va paket ushlashni aniqlash va qarshi turish.",
 				Content:     "Tarmoq hujumlari turli xil shakllarda kelishi mumkin. Man-in-the-Middle (MitM) hujumida tajovuzkor ikki tomon o'rtasidagi aloqani ushlaydi. DDoS hujumi tizimni haddan tashqari ko'p so'rovlar bilan yuklab, uni foydalanib bo'lmaydigan holga keltiradi.",
@@ -106,6 +107,9 @@ func seed() {
 		DB.Create(&modules)
 		log.Println("Seeded 4 modules")
 	}
+
+	// Rename existing "Tarmoq xavflari" module (old title) to "Tarmoq xavsizligi" for already-seeded databases
+	DB.Model(&models.Module{}).Where("title = ?", "Tarmoq xavflari").Update("title", "Tarmoq xavsizligi")
 
 	// Seed fuzzy weights
 	var fwCount int64
