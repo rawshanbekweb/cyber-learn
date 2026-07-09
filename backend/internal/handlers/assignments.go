@@ -10,6 +10,7 @@ import (
 	"cyberai-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -169,6 +170,14 @@ func CreateAssignment(c *gin.Context) {
 		assignmentType = models.AssignmentTypeNazariy
 	}
 
+	// Rows created for an "all students" assignment share a BatchID so that
+	// students who register later can be backfilled with the same assignment
+	// (see Register in auth.go).
+	var batchID string
+	if req.AllStudents {
+		batchID = uuid.NewString()
+	}
+
 	created := make([]AssignmentResponse, 0, len(targets))
 	for _, student := range targets {
 		assignment := models.Assignment{
@@ -180,6 +189,7 @@ func CreateAssignment(c *gin.Context) {
 			AssignmentType: assignmentType,
 			Completed:      false,
 			DateAssigned:   time.Now(),
+			BatchID:        batchID,
 		}
 
 		if err := database.DB.Create(&assignment).Error; err != nil {

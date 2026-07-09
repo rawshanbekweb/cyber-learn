@@ -29,18 +29,18 @@ type AuthResponse struct {
 }
 
 type UserPublic struct {
-	ID                      uint         `json:"id"`
-	Name                    string       `json:"name"`
-	Age                     int          `json:"age"`
-	Role                    models.Role  `json:"role"`
-	DiagnosticScore         float64      `json:"diagnosticScore"`
-	Level                   models.Level `json:"level"`
-	FuzzyScore              float64      `json:"fuzzyScore"`
-	CompletedModulesCount   int          `json:"completedModulesCount"`
-	Speed                   float64      `json:"speed"`
-	Errors                  float64      `json:"errors"`
-	HasCompletedInitialTest bool         `json:"hasCompletedInitialTest"`
-	HasFuzzyResult          bool         `json:"hasFuzzyResult"`
+	ID                      uint               `json:"id"`
+	Name                    string             `json:"name"`
+	Age                     int                `json:"age"`
+	Role                    models.Role        `json:"role"`
+	DiagnosticScore         float64            `json:"diagnosticScore"`
+	Level                   models.Level       `json:"level"`
+	FuzzyScore              float64            `json:"fuzzyScore"`
+	CompletedModulesCount   int                `json:"completedModulesCount"`
+	Speed                   float64            `json:"speed"`
+	Errors                  float64            `json:"errors"`
+	HasCompletedInitialTest bool               `json:"hasCompletedInitialTest"`
+	HasFuzzyResult          bool               `json:"hasFuzzyResult"`
 	LastFuzzyResult         *FuzzyResultPublic `json:"lastFuzzyResult"`
 }
 
@@ -164,6 +164,52 @@ func Register(c *gin.Context) {
 			Completed: false,
 		}
 		database.DB.Create(&mp)
+	}
+
+	// Backfill "hamma o'quvchilar" (all-students) assignments that were
+	// created before this student registered — otherwise a newly added
+	// student would never get the rows CreateAssignment fanned out to the
+	// roster at creation time.
+	var broadcastAssignments []models.Assignment
+	database.DB.Preload("Questions").
+		Where("batch_id <> ''").
+		Order("created_at asc").
+		Find(&broadcastAssignments)
+
+	seenBatches := make(map[string]bool)
+	for _, template := range broadcastAssignments {
+		if seenBatches[template.BatchID] {
+			continue
+		}
+		seenBatches[template.BatchID] = true
+
+		newAssignment := models.Assignment{
+			Title:          template.Title,
+			Description:    template.Description,
+			StudentID:      newUser.ID,
+			StudentName:    newUser.Name,
+			TargetModuleID: template.TargetModuleID,
+			AssignmentType: template.AssignmentType,
+			Completed:      false,
+			DateAssigned:   template.DateAssigned,
+			BatchID:        template.BatchID,
+		}
+		if err := database.DB.Create(&newAssignment).Error; err != nil {
+			continue
+		}
+		for _, q := range template.Questions {
+			database.DB.Create(&models.AssignmentQuestion{
+				AssignmentID:  newAssignment.ID,
+				Question:      q.Question,
+				Options:       q.Options,
+				CorrectAnswer: q.CorrectAnswer,
+			})
+		}
+
+		// Unlock the target module, matching CreateAssignment's behavior.
+		database.DB.Model(&models.ModuleProgress{}).
+			Where("user_id = ? AND module_id = ?", newUser.ID, template.TargetModuleID).
+			Update("unlocked", true)
 	}
 
 	token, err := middleware.GenerateToken(newUser.ID, newUser.Name, string(newUser.Role))

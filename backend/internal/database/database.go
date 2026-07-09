@@ -8,6 +8,7 @@ import (
 	"cyberai-backend/internal/models"
 
 	"github.com/glebarez/sqlite"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -55,7 +56,42 @@ func Init() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
+	backfillLegacyAssignmentBatches()
 	seed()
+}
+
+// backfillLegacyAssignmentBatches assigns a shared BatchID to "hamma
+// o'quvchilar" (all-students) assignment rows created before the BatchID
+// column existed, so CreateAssignment/Register can treat them as one
+// broadcast batch (see Register in handlers/auth.go). It infers batches
+// using the same identity the frontend already groups cards by — one-time
+// and idempotent: rows that already have a BatchID are skipped.
+func backfillLegacyAssignmentBatches() {
+	var rows []models.Assignment
+	DB.Where("batch_id IS NULL OR batch_id = ''").Order("created_at asc").Find(&rows)
+	if len(rows) == 0 {
+		return
+	}
+
+	type groupKey struct {
+		title       string
+		description string
+		moduleID    uint
+		aType       models.AssignmentType
+		day         string
+	}
+	groups := make(map[groupKey][]uint)
+	for _, a := range rows {
+		k := groupKey{a.Title, a.Description, a.TargetModuleID, a.AssignmentType, a.DateAssigned.Format("2006-01-02")}
+		groups[k] = append(groups[k], a.ID)
+	}
+
+	for _, ids := range groups {
+		if len(ids) < 2 {
+			continue // targeted at a single student, not a broadcast batch
+		}
+		DB.Model(&models.Assignment{}).Where("id IN ?", ids).Update("batch_id", uuid.NewString())
+	}
 }
 
 func seed() {

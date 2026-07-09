@@ -38,15 +38,15 @@ type User struct {
 	Password string `json:"-"` // only teacher uses password
 
 	// Student-specific fields
-	DiagnosticScore        float64 `json:"diagnosticScore"`
-	Level                  Level   `gorm:"default:'Beginner'" json:"level"`
-	FuzzyScore             float64 `json:"fuzzyScore"`
-	CompletedModulesCount  int     `json:"completedModulesCount"`
-	Speed                  float64 `json:"speed"`
-	Errors                 float64 `json:"errors"`
-	HasCompletedInitialTest bool   `gorm:"default:false" json:"hasCompletedInitialTest"`
-	XP                     int     `gorm:"default:0" json:"xp"`
-	Avatar                 string  `json:"avatar"`
+	DiagnosticScore         float64 `json:"diagnosticScore"`
+	Level                   Level   `gorm:"default:'Beginner'" json:"level"`
+	FuzzyScore              float64 `json:"fuzzyScore"`
+	CompletedModulesCount   int     `json:"completedModulesCount"`
+	Speed                   float64 `json:"speed"`
+	Errors                  float64 `json:"errors"`
+	HasCompletedInitialTest bool    `gorm:"default:false" json:"hasCompletedInitialTest"`
+	XP                      int     `gorm:"default:0" json:"xp"`
+	Avatar                  string  `json:"avatar"`
 
 	// Fuzzy result (stored as separate fields)
 	LastFuzzyScore float64 `json:"lastFuzzyScore"`
@@ -144,6 +144,10 @@ type Assignment struct {
 	AssignmentType AssignmentType `gorm:"default:'Nazariy'" json:"assignmentType"`
 	Completed      bool           `gorm:"default:false" json:"completed"`
 	DateAssigned   time.Time      `json:"dateAssigned"`
+	// BatchID groups the per-student rows created together for a "hamma
+	// o'quvchilar" (all-students) assignment, so it can be backfilled for
+	// students who register after the assignment was created.
+	BatchID string `gorm:"index" json:"-"`
 
 	Questions []AssignmentQuestion `gorm:"foreignKey:AssignmentID" json:"questions"`
 }
