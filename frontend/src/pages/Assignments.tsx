@@ -8,8 +8,31 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Trash2, CheckCircle2, Clock, BookOpen,
   ChevronDown, ChevronUp, HelpCircle, GraduationCap,
-  ClipboardList, User, Send, X, CircleDot,
+  ClipboardList, User, Users, Send, X, CircleDot,
 } from "lucide-react";
+
+// Assigning to "hamma o'quvchilar" creates one backend row per student with
+// identical title/description/module/date — group those rows back into a
+// single card so the list doesn't turn into one row per student.
+type AssignmentGroup = {
+  key: string;
+  rep: ReturnType<typeof useAppStore.getState>["assignments"][number];
+  members: ReturnType<typeof useAppStore.getState>["assignments"][number][];
+};
+
+function groupAssignments(list: ReturnType<typeof useAppStore.getState>["assignments"]): AssignmentGroup[] {
+  const map = new Map<string, AssignmentGroup>();
+  for (const a of list) {
+    const key = [a.title, a.description ?? "", a.targetModuleId, a.assignmentType, a.dateAssigned].join("||");
+    const existing = map.get(key);
+    if (existing) {
+      existing.members.push(a);
+    } else {
+      map.set(key, { key, rep: a, members: [a] });
+    }
+  }
+  return Array.from(map.values());
+}
 
 export default function Assignments() {
   const { students, assignments, moduleProgress, addAssignment, completeAssignment, userRole, fetchStudents, fetchAssignments } = useAppStore();
@@ -86,6 +109,9 @@ export default function Assignments() {
 
   const filteredPending = pending.filter(a => filterStudent === "all" || a.studentId === filterStudent);
   const filteredDone = done.filter(a => filterStudent === "all" || a.studentId === filterStudent);
+
+  const groupedPending = groupAssignments(filteredPending);
+  const groupedDone = groupAssignments(filteredDone);
 
   const pageVariants = {
     hidden: { opacity: 0, y: 16 },
@@ -377,25 +403,25 @@ export default function Assignments() {
                 Kutilayotgan topshiriqlar
               </span>
               <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-semibold">
-                {filteredPending.length} ta
+                {groupedPending.length} ta
               </span>
             </div>
             <div className="p-4 space-y-3">
-              {filteredPending.length === 0 ? (
+              {groupedPending.length === 0 ? (
                 <div className="text-center py-8 text-xs text-zinc-400">
                   Kutilayotgan topshiriqlar yo'q.
                 </div>
               ) : (
-                filteredPending.map(as => (
+                groupedPending.map(group => (
                   <AssignmentCard
-                      key={as.id}
-                      assignment={as}
-                      expanded={expandedAssignment === as.id}
-                      onToggle={() => setExpandedAssignment(expandedAssignment === as.id ? null : as.id)}
-                      onComplete={async () => {
-                        const res = await completeAssignment(as.id);
+                      key={group.key}
+                      group={group}
+                      expanded={expandedAssignment === group.rep.id}
+                      onToggle={() => setExpandedAssignment(expandedAssignment === group.rep.id ? null : group.rep.id)}
+                      onCompleteMember={async (id, label) => {
+                        const res = await completeAssignment(id);
                         if (res.success) {
-                          toast({ title: "Topshiriq bajarildi ✓", description: `"${as.title}" yakunlandi.` });
+                          toast({ title: "Topshiriq bajarildi ✓", description: `"${group.rep.title}" (${label}) yakunlandi.` });
                         } else {
                           toast({ variant: "destructive", title: "Xatolik", description: res.message });
                         }
@@ -407,7 +433,7 @@ export default function Assignments() {
           </div>
 
           {/* Completed */}
-          {filteredDone.length > 0 && (
+          {groupedDone.length > 0 && (
             <div className="rounded-2xl border border-zinc-200 bg-white shadow-xs overflow-hidden">
               <div className="px-5 py-4 flex items-center gap-2.5 bg-zinc-50/50 border-b border-zinc-200">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -415,16 +441,16 @@ export default function Assignments() {
                   Bajarilgan topshiriqlar
                 </span>
                 <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold">
-                  {filteredDone.length} ta
+                  {groupedDone.length} ta
                 </span>
               </div>
               <div className="p-4 space-y-3">
-                {filteredDone.map(as => (
+                {groupedDone.map(group => (
                   <AssignmentCard
-                    key={as.id}
-                    assignment={as}
-                    expanded={expandedAssignment === as.id}
-                    onToggle={() => setExpandedAssignment(expandedAssignment === as.id ? null : as.id)}
+                    key={group.key}
+                    group={group}
+                    expanded={expandedAssignment === group.rep.id}
+                    onToggle={() => setExpandedAssignment(expandedAssignment === group.rep.id ? null : group.rep.id)}
                   />
                 ))}
               </div>
@@ -438,20 +464,23 @@ export default function Assignments() {
 
 // ── Sub-component: Assignment Card ──
 function AssignmentCard({
-  assignment,
+  group,
   expanded,
   onToggle,
-  onComplete,
+  onCompleteMember,
 }: {
-  assignment: ReturnType<typeof useAppStore.getState>["assignments"][number];
+  group: AssignmentGroup;
   expanded: boolean;
   onToggle: () => void;
-  onComplete?: () => void;
+  onCompleteMember?: (id: number, label: string) => void;
 }) {
+  const { rep, members } = group;
+  const isBatch = members.length > 1;
+
   return (
     <div
       className={`rounded-xl border transition-all duration-200 overflow-hidden ${
-        assignment.completed
+        rep.completed
           ? "bg-emerald-50/10 border-emerald-100/70"
           : "bg-white border-zinc-200 shadow-2xs hover:shadow-xs"
       }`}
@@ -463,10 +492,10 @@ function AssignmentCard({
       >
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`font-bold text-xs ${assignment.completed ? "text-zinc-500" : "text-zinc-800"}`}>
-              {assignment.title}
+            <span className={`font-bold text-xs ${rep.completed ? "text-zinc-500" : "text-zinc-800"}`}>
+              {rep.title}
             </span>
-            {assignment.completed ? (
+            {rep.completed ? (
               <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold uppercase tracking-wider">
                 Bajarildi
               </span>
@@ -477,16 +506,22 @@ function AssignmentCard({
             )}
           </div>
           <div className="flex items-center gap-3 text-[10px] text-zinc-400 flex-wrap">
-            <span className="flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-zinc-300" /> {assignment.studentName}
-            </span>
-            <span className="flex items-center gap-1">
-              <BookOpen className="w-3.5 h-3.5 text-zinc-300" /> Modul {assignment.targetModuleId}
-            </span>
-            <span>{assignment.dateAssigned}</span>
-            {(assignment.questions ?? []).length > 0 && (
+            {isBatch ? (
               <span className="flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5 text-zinc-300" /> {assignment.questions.length} savol
+                <Users className="w-3.5 h-3.5 text-zinc-300" /> Hamma o'quvchilar ({members.length} ta)
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <User className="w-3.5 h-3.5 text-zinc-300" /> {rep.studentName}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <BookOpen className="w-3.5 h-3.5 text-zinc-300" /> Modul {rep.targetModuleId}
+            </span>
+            <span>{rep.dateAssigned}</span>
+            {(rep.questions ?? []).length > 0 && (
+              <span className="flex items-center gap-1">
+                <HelpCircle className="w-3.5 h-3.5 text-zinc-300" /> {rep.questions.length} savol
               </span>
             )}
           </div>
@@ -510,18 +545,18 @@ function AssignmentCard({
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-3 border-t border-zinc-100 bg-zinc-50/30">
-              {assignment.description && (
+              {rep.description && (
                 <p className="text-xs pt-3 text-zinc-500 leading-relaxed">
-                  {assignment.description}
+                  {rep.description}
                 </p>
               )}
 
-              {(assignment.questions ?? []).length > 0 ? (
+              {(rep.questions ?? []).length > 0 ? (
                 <div className="space-y-3 pt-2">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mt-2">
                     Savollar
                   </div>
-                  {(assignment.questions ?? []).map((q, idx) => (
+                  {(rep.questions ?? []).map((q, idx) => (
                     <div
                       key={q.id}
                       className="rounded-xl p-3.5 space-y-2 bg-white border border-zinc-200 shadow-2xs"
@@ -555,13 +590,35 @@ function AssignmentCard({
                 </p>
               )}
 
-              {onComplete && !assignment.completed && (
-                <button
-                  onClick={onComplete}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs h-8.5 rounded-lg font-bold tracking-wider uppercase mt-1 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-all cursor-pointer"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Bajarildi deb belgilash
-                </button>
+              {onCompleteMember && !rep.completed && (
+                isBatch ? (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      O'quvchilar
+                    </div>
+                    {members.map(m => (
+                      <div
+                        key={m.id}
+                        className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white border border-zinc-200"
+                      >
+                        <span className="text-xs font-semibold text-zinc-700 truncate">{m.studentName}</span>
+                        <button
+                          onClick={() => onCompleteMember(m.id, m.studentName)}
+                          className="shrink-0 flex items-center gap-1 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-all cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-3 h-3" /> Bajarildi
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => onCompleteMember(rep.id, rep.studentName)}
+                    className="w-full flex items-center justify-center gap-1.5 text-xs h-8.5 rounded-lg font-bold tracking-wider uppercase mt-1 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Bajarildi deb belgilash
+                  </button>
+                )
               )}
             </div>
           </motion.div>

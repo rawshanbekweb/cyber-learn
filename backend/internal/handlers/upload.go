@@ -28,8 +28,6 @@ var (
 	unsafeFileChars = regexp.MustCompile(`[^a-zA-Z0-9]`)
 )
 
-// POST /api/upload — stores the file's bytes in Postgres (not local disk) so
-// they survive container restarts/redeploys on the hosting platform.
 func UploadFile(c *gin.Context) {
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
