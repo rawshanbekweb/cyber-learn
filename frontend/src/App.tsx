@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnimatePresence } from "framer-motion";
 import NotFound from "@/pages/not-found";
+import Landing from "@/pages/Landing";
 import { Layout } from "@/components/Layout";
 import { useAppStore } from "@/store/useAppStore";
 
@@ -56,6 +57,8 @@ function Router() {
 function App() {
   const { currentUser, token, verifySession } = useAppStore();
   const [isVerifying, setIsVerifying] = useState(!!token);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authTab, setAuthTab] = useState<"Student" | "Teacher">("Student");
 
   useEffect(() => {
     if (!token) {
@@ -79,7 +82,16 @@ function App() {
     return (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AuthPage />
+          {showAuth ? (
+            <AuthPage onBack={() => setShowAuth(false)} initialTab={authTab} />
+          ) : (
+            <Landing
+              onGetStarted={(tab) => {
+                setAuthTab(tab);
+                setShowAuth(true);
+              }}
+            />
+          )}
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

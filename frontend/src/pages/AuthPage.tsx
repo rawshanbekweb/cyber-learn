@@ -2,15 +2,20 @@ import { useState, useEffect } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import {
   GraduationCap, UserCheck, ShieldCheck, UserPlus,
-  LogIn, AlertTriangle
+  LogIn, AlertTriangle, ArrowLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function AuthPage() {
+interface AuthPageProps {
+  onBack?: () => void;
+  initialTab?: "Student" | "Teacher";
+}
+
+export default function AuthPage({ onBack, initialTab = "Student" }: AuthPageProps) {
   const { loginUser, registerStudent, students } = useAppStore();
   const { toast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"Student" | "Teacher">("Student");
+  const [activeTab, setActiveTab] = useState<"Student" | "Teacher">(initialTab);
   const [studentAction, setStudentAction] = useState<"login" | "register">("login");
   const [studentName, setStudentName] = useState("");
   const [studentAge, setStudentAge] = useState("");
@@ -103,6 +108,16 @@ export default function AuthPage() {
 
       {/* Main content */}
       <div className="w-full max-w-md space-y-5 relative" style={{ zIndex: 1 }}>
+
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-primary transition-colors duration-150"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Bosh sahifaga qaytish
+          </button>
+        )}
 
         {/* ── Login Card ── */}
         <div
